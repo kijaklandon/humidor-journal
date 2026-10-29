@@ -136,11 +136,9 @@
   .check.on { background: var(--accent); border-color: var(--accent); }
   .ach-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
   .ach-row:first-of-type { border-top: none; padding-top: 2px; }
-  .ach-icon { font-size: 26px; width: 34px; text-align: center; flex: none; }
   .ach-row .grow { flex: 1; min-width: 0; }
   .ach-title { font-weight: 650; font-size: 15px; }
   .ach-desc { font-size: 13px; color: var(--muted); line-height: 1.3; }
-  .ach-row.todo .ach-icon { filter: grayscale(1); opacity: .5; }
   .bar { height: 6px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
   .bar span { display: block; height: 100%; background: var(--accent); }
   .track-head { display: flex; align-items: center; gap: 10px; }
@@ -1237,33 +1235,33 @@ function maxPerBrand() {
 const vaultEntry = l => CATALOG.find(c => fullName(c).toLowerCase() === `${l.brand} ${l.name}`.trim().toLowerCase());
 
 const ACHIEVEMENTS = [
-  { id: 'first', icon: '🔥', title: 'First Light', desc: 'Log your first cigar', p: () => [logs.length, 1] },
-  { id: 'ten', icon: '🪵', title: 'Regular', desc: 'Log 10 cigars', p: () => [logs.length, 10] },
-  { id: 'twentyfive', icon: '🥃', title: 'Aficionado', desc: 'Log 25 cigars', p: () => [logs.length, 25] },
-  { id: 'fifty', icon: '🎩', title: 'Connoisseur', desc: 'Log 50 cigars', p: () => [logs.length, 50] },
-  { id: 'hundred', icon: '💯', title: 'Century Club', desc: 'Log 100 cigars', p: () => [logs.length, 100] },
-  { id: 'brands5', icon: '🧭', title: 'Brand Explorer', desc: 'Smoke 5 different brands', p: () => [brandCount(), 5] },
-  { id: 'brands15', icon: '🗺️', title: 'Brand Collector', desc: 'Smoke 15 different brands', p: () => [brandCount(), 15] },
-  { id: 'brands30', icon: '👑', title: 'Brand Master', desc: 'Smoke 30 different brands', p: () => [brandCount(), 30] },
-  { id: 'loyal', icon: '🤝', title: 'Loyalist', desc: 'Smoke 5 cigars from one brand', p: () => [maxPerBrand(), 5] },
-  { id: 'countries3', icon: '🛂', title: 'Passport', desc: 'Cigars from 3 countries', p: () => [countryCount(), 3] },
-  { id: 'countries5', icon: '✈️', title: 'Globetrotter', desc: 'Cigars from 5 countries', p: () => [countryCount(), 5] },
-  { id: 'cuban', icon: '🌴', title: 'Habanos Hunter', desc: 'Smoke a Cuban cigar', p: () => [has(l => l.origin === 'Cuba'), 1] },
-  { id: 'wrappers5', icon: '🍂', title: 'Wrapper Spectrum', desc: 'Try 5 wrapper types', p: () => [wrapperCount(), 5] },
-  { id: 'wrappers8', icon: '🌈', title: 'Full Spectrum', desc: 'Try 8 wrapper types', p: () => [wrapperCount(), 8] },
-  { id: 'lightdark', icon: '☯️', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [has(l => l.wrapper === 'Connecticut') + has(l => DARK.includes(l.wrapper)), 2] },
-  { id: 'full', icon: '💪', title: 'Full Throttle', desc: 'Smoke a full-strength cigar', p: () => [has(l => l.strength === 5), 1] },
-  { id: 'ladder', icon: '🪜', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
-  { id: 'limited', icon: '🦄', title: 'Unicorn Hunter', desc: 'Smoke a limited release', p: () => [has(l => vaultEntry(l)?.status === 'limited'), 1] },
-  { id: 'fivestar', icon: '⭐', title: 'Five Stars', desc: 'Give a cigar 5 stars', p: () => [has(l => l.rating === 5), 1] },
-  { id: 'critic', icon: '🧐', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [has(l => l.rating <= 2), 1] },
-  { id: 'notes', icon: '📝', title: 'Note Taker', desc: 'Log 5 cigars with detailed notes', p: () => [logs.filter(l => l.detail).length, 5] },
-  { id: 'thirds', icon: '⏳', title: 'Thirds Master', desc: 'Note all three thirds on 5 cigars', p: () => [logs.filter(l => l.detail?.thirds?.every(t => t.notes.length || t.text)).length, 5] },
-  { id: 'perfect', icon: '🎯', title: 'Perfect Smoke', desc: 'Score a 5 for both draw and burn', p: () => [has(l => l.detail?.draw === 5 && l.detail?.burn === 5), 1] },
-  { id: 'pairing', icon: '🍷', title: 'Pairing Pro', desc: 'Log 10 cigars with a pairing', p: () => [logs.filter(l => l.pairing).length, 10] },
-  { id: 'stocked', icon: '🗄️', title: 'Stocked Up', desc: 'Have 10 cigars in your humidor', p: () => [invTotal(), 10] },
-  { id: 'collector', icon: '📦', title: 'Collector', desc: 'Have 25 cigars in your humidor', p: () => [invTotal(), 25] },
-  { id: 'reviewer', icon: '🔍', title: 'Critic\'s Eye', desc: 'Review 10 cigars in the vault', p: () => [Object.keys(reviews).length, 10] },
+  { id: 'first', title: 'First Light', desc: 'Log your first cigar', p: () => [logs.length, 1] },
+  { id: 'ten', title: 'Regular', desc: 'Log 10 cigars', p: () => [logs.length, 10] },
+  { id: 'twentyfive', title: 'Aficionado', desc: 'Log 25 cigars', p: () => [logs.length, 25] },
+  { id: 'fifty', title: 'Connoisseur', desc: 'Log 50 cigars', p: () => [logs.length, 50] },
+  { id: 'hundred', title: 'Century Club', desc: 'Log 100 cigars', p: () => [logs.length, 100] },
+  { id: 'brands5', title: 'Brand Explorer', desc: 'Smoke 5 different brands', p: () => [brandCount(), 5] },
+  { id: 'brands15', title: 'Brand Collector', desc: 'Smoke 15 different brands', p: () => [brandCount(), 15] },
+  { id: 'brands30', title: 'Brand Master', desc: 'Smoke 30 different brands', p: () => [brandCount(), 30] },
+  { id: 'loyal', title: 'Loyalist', desc: 'Smoke 5 cigars from one brand', p: () => [maxPerBrand(), 5] },
+  { id: 'countries3', title: 'Passport', desc: 'Cigars from 3 countries', p: () => [countryCount(), 3] },
+  { id: 'countries5', title: 'Globetrotter', desc: 'Cigars from 5 countries', p: () => [countryCount(), 5] },
+  { id: 'cuban', title: 'Habanos Hunter', desc: 'Smoke a Cuban cigar', p: () => [has(l => l.origin === 'Cuba'), 1] },
+  { id: 'wrappers5', title: 'Wrapper Spectrum', desc: 'Try 5 wrapper types', p: () => [wrapperCount(), 5] },
+  { id: 'wrappers8', title: 'Full Spectrum', desc: 'Try 8 wrapper types', p: () => [wrapperCount(), 8] },
+  { id: 'lightdark', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [has(l => l.wrapper === 'Connecticut') + has(l => DARK.includes(l.wrapper)), 2] },
+  { id: 'full', title: 'Full Throttle', desc: 'Smoke a full-strength cigar', p: () => [has(l => l.strength === 5), 1] },
+  { id: 'ladder', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
+  { id: 'limited', title: 'Unicorn Hunter', desc: 'Smoke a limited release', p: () => [has(l => vaultEntry(l)?.status === 'limited'), 1] },
+  { id: 'fivestar', title: 'Five Stars', desc: 'Give a cigar 5 stars', p: () => [has(l => l.rating === 5), 1] },
+  { id: 'critic', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [has(l => l.rating <= 2), 1] },
+  { id: 'notes', title: 'Note Taker', desc: 'Log 5 cigars with detailed notes', p: () => [logs.filter(l => l.detail).length, 5] },
+  { id: 'thirds', title: 'Thirds Master', desc: 'Note all three thirds on 5 cigars', p: () => [logs.filter(l => l.detail?.thirds?.every(t => t.notes.length || t.text)).length, 5] },
+  { id: 'perfect', title: 'Perfect Smoke', desc: 'Score a 5 for both draw and burn', p: () => [has(l => l.detail?.draw === 5 && l.detail?.burn === 5), 1] },
+  { id: 'pairing', title: 'Pairing Pro', desc: 'Log 10 cigars with a pairing', p: () => [logs.filter(l => l.pairing).length, 10] },
+  { id: 'stocked', title: 'Stocked Up', desc: 'Have 10 cigars in your humidor', p: () => [invTotal(), 10] },
+  { id: 'collector', title: 'Collector', desc: 'Have 25 cigars in your humidor', p: () => [invTotal(), 25] },
+  { id: 'reviewer', title: 'Critic\'s Eye', desc: 'Review 10 cigars in the vault', p: () => [Object.keys(reviews).length, 10] },
 ];
 const isDone = a => { const [have, need] = a.p(); return have >= need; };
 const achById = id => ACHIEVEMENTS.find(a => a.id === id);
@@ -1271,11 +1269,11 @@ const achById = id => ACHIEVEMENTS.find(a => a.id === id);
 // Achievements that build on each other share one bar with checkpoints.
 // Everything not in a track is shown as a one-off challenge.
 const TRACKS = [
-  { icon: '🔥', name: 'Cigars logged', value: () => logs.length, ids: ['first', 'ten', 'twentyfive', 'fifty', 'hundred'] },
-  { icon: '🧭', name: 'Brands tried', value: brandCount, ids: ['brands5', 'brands15', 'brands30'] },
-  { icon: '🛂', name: 'Countries', value: countryCount, ids: ['countries3', 'countries5'] },
-  { icon: '🍂', name: 'Wrapper types', value: wrapperCount, ids: ['wrappers5', 'wrappers8'] },
-  { icon: '🗄️', name: 'Humidor', value: invTotal, ids: ['stocked', 'collector'] },
+  { name: 'Cigars logged', value: () => logs.length, ids: ['first', 'ten', 'twentyfive', 'fifty', 'hundred'] },
+  { name: 'Brands tried', value: brandCount, ids: ['brands5', 'brands15', 'brands30'] },
+  { name: 'Countries', value: countryCount, ids: ['countries3', 'countries5'] },
+  { name: 'Wrapper types', value: wrapperCount, ids: ['wrappers5', 'wrappers8'] },
+  { name: 'Humidor', value: invTotal, ids: ['stocked', 'collector'] },
 ];
 const inTrack = new Set(TRACKS.flatMap(t => t.ids));
 
@@ -1290,7 +1288,6 @@ function trackHtml(t) {
   return `
     <div class="card" style="--n:${steps.length}">
       <div class="track-head">
-        <span class="ach-icon" style="width:auto">${t.icon}</span>
         <span class="card-title">${t.name}</span>
         <span class="count">${value}</span>
       </div>
@@ -1299,7 +1296,7 @@ function trackHtml(t) {
         <div class="step ${s.done ? 'done' : ''}" title="${esc(s.a.desc)}">
           <span class="check ${s.done ? 'on' : ''}">${s.done ? '✓' : ''}</span>
           <span class="num">${s.need}</span>
-          <span class="name"><span style="font-size:16px">${s.a.icon}</span><br>${s.a.title}</span>
+          <span class="name">${s.a.title}</span>
         </div>`).join('')}
       </div>
     </div>`;
@@ -1309,8 +1306,7 @@ function challengeRow(a) {
   const [have, need] = a.p();
   const done = !!earned[a.id] || have >= need;
   return `
-    <div class="ach-row ${done ? '' : 'todo'}">
-      <span class="ach-icon">${a.icon}</span>
+    <div class="ach-row">
       <div class="grow">
         <div class="ach-title">${a.title}</div>
         <div class="ach-desc">${a.desc}</div>
@@ -1328,12 +1324,12 @@ function checkAchievements(silent) {
   try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
   // Wait for the "saved" toast to finish before celebrating
   if (!silent) setTimeout(() => toast(fresh.length === 1
-    ? `🏆 Unlocked: ${fresh[0].icon} ${fresh[0].title}`
-    : `🏆 ${fresh.length} achievements unlocked!`), 1500);
+    ? `Achievement unlocked: ${fresh[0].title}`
+    : `${fresh.length} achievements unlocked`), 1500);
 }
 
 function renderProfile() {
-  const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '🍂';
+  const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
   const sub = [profile.location, profile.since ? `Smoking since ${profile.since}` : ''].filter(Boolean).join(' · ');
   const favs = [
     profile.favCigar && `Favorite: ${profile.favCigar}`,
@@ -1349,7 +1345,7 @@ function renderProfile() {
   $('#profile').innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:flex-start;gap:14px">
-        <div class="avatar">${esc(initials)}</div>
+        <div class="avatar">${initials ? esc(initials) : '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>'}</div>
         <div style="flex:1;min-width:0">
           <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
           <div class="card-sub">${esc(sub) || 'Tap Edit profile to add your details'}</div>
@@ -1371,7 +1367,6 @@ function renderProfile() {
     <div class="card">
       ${done.length ? done.map(a => `
         <div class="ach-row">
-          <span class="ach-icon">${a.icon}</span>
           <div class="grow">
             <div class="ach-title">${a.title}</div>
             <div class="ach-desc">${a.desc}${earned[a.id] ? ' · ' + fmtDay(earned[a.id]) : ''}</div>
