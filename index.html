@@ -77,7 +77,7 @@
   /* Forms */
   label.field { display: block; margin-bottom: 14px; }
   label.field > span { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
-  input[type=text], input[type=date], input[type=search], select, textarea {
+  input[type=text], input[type=date], input[type=search], input[type=number], select, textarea {
     width: 100%; font: inherit; color: var(--text);
     background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
     padding: 11px 12px; outline: none; -webkit-appearance: none; appearance: none;
@@ -120,6 +120,31 @@
   .tag.warn { border-color: var(--danger); color: var(--danger); }
   .tag.mine { border-color: var(--accent); color: var(--accent); }
   .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .detail-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .detail-box summary { cursor: pointer; font-weight: 650; list-style: none; }
+  .detail-box summary::-webkit-details-marker { display: none; }
+  .detail-box summary::before { content: '▸ '; color: var(--accent); }
+  .detail-box[open] summary::before { content: '▾ '; }
+  .mini-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 16px 0 8px; }
+  .score-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .score-row .name { font-size: 15px; }
+  .score-row .caption { grid-column: 2; font-size: 12px; color: var(--accent); margin-top: -4px; min-height: 14px; }
+  .dots { display: flex; gap: 6px; }
+  .dots button {
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--muted); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .dots button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .third { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+  .third:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+  .third .chips { margin: 6px 0 8px; }
+  .third .chip { font-size: 13px; padding: 5px 10px; }
+  .score-view { display: grid; grid-template-columns: 110px auto 1fr; gap: 4px 10px; align-items: center; font-size: 15px; margin: 8px 0; }
+  .score-view .pips { color: var(--accent); letter-spacing: 2px; white-space: nowrap; }
+  .score-view .pips .off { color: #5a4636; }
   .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .filters select { font-size: 14px; padding: 9px 26px 9px 10px; background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; }
   #browse-list h3 { margin-top: 20px; }
@@ -209,6 +234,17 @@
       <label class="field"><span>Paired with (optional)</span>
         <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
       </label>
+      <details id="f-detail" class="detail-box">
+        <summary>Detailed smoke notes <span class="muted">(optional)</span></summary>
+        <div class="mini-label">Construction</div>
+        <div id="f-scores"></div>
+        <label class="field" style="margin-top:12px"><span>Smoke time (minutes)</span>
+          <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
+        </label>
+        <div class="mini-label">Flavor by thirds</div>
+        <p class="muted" style="font-size:13px;margin:0 0 8px">Flavors you tap here also count toward your overall flavors.</p>
+        <div id="f-thirds"></div>
+      </details>
       <label class="toggle field"><input type="checkbox" id="f-again"> <span style="margin:0;color:var(--text)">I'd smoke this again</span></label>
       <div class="btn-row">
         <button type="button" class="btn ghost" id="f-cancel">Cancel</button>
@@ -376,6 +412,79 @@ $('#f-notes').addEventListener('click', e => {
   renderNotesInput();
 });
 
+// ---------- Detailed smoke notes ----------
+const SCORES = [
+  { k: 'draw', name: 'Draw', labels: ['Plugged', 'Tight', 'Okay', 'Good', 'Perfect'] },
+  { k: 'burn', name: 'Burn', labels: ['Kept going out', 'Needed touch-ups', 'A little wavy', 'Even', 'Razor sharp'] },
+  { k: 'construction', name: 'Construction', labels: ['Falling apart', 'Soft spots', 'Okay', 'Solid', 'Flawless'] },
+  { k: 'ash', name: 'Ash', labels: ['Fell right off', 'Flaky', 'Average', 'Firm', 'Rock solid'] },
+];
+const THIRDS = ['First third', 'Second third', 'Final third'];
+let formScores = {};
+let formThirds = [new Set(), new Set(), new Set()];
+
+function renderDetailInput() {
+  $('#f-scores').innerHTML = SCORES.map(s => `
+    <div class="score-row">
+      <span class="name">${s.name}</span>
+      <div class="dots">${[1, 2, 3, 4, 5].map(v =>
+        `<button type="button" data-k="${s.k}" data-v="${v}" class="${formScores[s.k] === v ? 'on' : ''}">${v}</button>`).join('')}</div>
+      <span class="caption">${formScores[s.k] ? s.labels[formScores[s.k] - 1] : ''}</span>
+    </div>`).join('');
+  // Keep anything already typed in the thirds' note boxes when re-rendering
+  const typed = THIRDS.map((_, i) => $(`#f-third-${i}`)?.value ?? '');
+  $('#f-thirds').innerHTML = THIRDS.map((label, i) => `
+    <div class="third">
+      <div style="font-weight:600">${label}</div>
+      <div class="chips">${NOTES.map(n =>
+        `<button type="button" class="chip ${formThirds[i].has(n) ? 'on' : ''}" data-t="${i}" data-n="${n}">${n}</button>`).join('')}</div>
+      <input type="text" id="f-third-${i}" placeholder="Anything else about the ${label.toLowerCase()}?">
+    </div>`).join('');
+  THIRDS.forEach((_, i) => $(`#f-third-${i}`).value = typed[i]);
+}
+$('#f-scores').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]');
+  if (!b) return;
+  const v = +b.dataset.v;
+  // Tapping the selected score again clears it
+  if (formScores[b.dataset.k] === v) delete formScores[b.dataset.k];
+  else formScores[b.dataset.k] = v;
+  renderDetailInput();
+});
+$('#f-thirds').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]');
+  if (!b) return;
+  const set = formThirds[+b.dataset.t];
+  set.has(b.dataset.n) ? set.delete(b.dataset.n) : set.add(b.dataset.n);
+  renderDetailInput();
+});
+
+function readDetailInput() {
+  const thirds = THIRDS.map((_, i) => ({ notes: [...formThirds[i]], text: $(`#f-third-${i}`).value.trim() }));
+  const time = Math.round(+$('#f-time').value) || null;
+  const filled = Object.keys(formScores).length || time || thirds.some(t => t.notes.length || t.text);
+  return filled ? { ...formScores, time, thirds } : undefined;
+}
+
+function detailHtml(d) {
+  if (!d) return '';
+  const scores = SCORES.filter(s => d[s.k]).map(s => `
+    <span>${s.name}</span>
+    <span class="pips">${'●'.repeat(d[s.k])}<span class="off">${'●'.repeat(5 - d[s.k])}</span></span>
+    <span class="muted" style="font-size:13px">${s.labels[d[s.k] - 1]}</span>`).join('');
+  const thirds = (d.thirds || []).map((t, i) => t.notes.length || t.text ? `
+    <div class="third">
+      <div style="font-weight:600">${THIRDS[i]}</div>
+      ${t.notes.length ? `<div class="chips">${t.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
+      ${t.text ? `<div class="muted" style="font-size:14px;margin-top:4px">${esc(t.text)}</div>` : ''}
+    </div>` : '').join('');
+  return `
+    <h3>Smoke notes</h3>
+    ${scores ? `<div class="score-view">${scores}</div>` : ''}
+    ${d.time ? `<p style="margin:6px 0">Smoke time: <b>${d.time} min</b></p>` : ''}
+    ${thirds}`;
+}
+
 const updateStrengthLabel = () => $('#f-strength-label').textContent = STRENGTHS[$('#f-strength').value - 1];
 $('#f-strength').addEventListener('input', updateStrengthLabel);
 
@@ -400,6 +509,10 @@ function resetForm(prefill) {
   $('#f-strength').value = 3;
   formRating = 0;
   formNotes = new Set();
+  formScores = {};
+  formThirds = [new Set(), new Set(), new Set()];
+  THIRDS.forEach((_, i) => $(`#f-third-${i}`) && ($(`#f-third-${i}`).value = ''));
+  $('#f-detail').open = false;
   if (prefill) {
     $('#f-name').value = prefill.n;
     $('#f-brand').value = prefill.b;
@@ -411,6 +524,7 @@ function resetForm(prefill) {
   updateStrengthLabel();
   renderRatingInput();
   renderNotesInput();
+  renderDetailInput();
 }
 
 function editLog(id) {
@@ -431,9 +545,16 @@ function editLog(id) {
   $('#f-again').checked = !!l.again;
   formRating = l.rating;
   formNotes = new Set(l.notes || []);
+  const d = l.detail || {};
+  formScores = Object.fromEntries(SCORES.filter(s => d[s.k]).map(s => [s.k, d[s.k]]));
+  formThirds = THIRDS.map((_, i) => new Set(d.thirds?.[i]?.notes || []));
+  $('#f-time').value = d.time || '';
+  $('#f-detail').open = !!l.detail;
   updateStrengthLabel();
   renderRatingInput();
   renderNotesInput();
+  renderDetailInput();
+  THIRDS.forEach((_, i) => $(`#f-third-${i}`).value = d.thirds?.[i]?.text || '');
   closeSheet();
   show('add');
 }
@@ -442,6 +563,9 @@ $('#log-form').addEventListener('submit', e => {
   e.preventDefault();
   if (!formRating) { toast('Give it a star rating'); return; }
   const id = $('#f-id').value;
+  const detail = readDetailInput();
+  // Flavors from the thirds feed the overall flavors (and so the recommendations)
+  const allNotes = new Set([...formNotes, ...(detail?.thirds || []).flatMap(t => t.notes)]);
   const entry = {
     id: id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: $('#f-name').value.trim(),
@@ -452,10 +576,11 @@ $('#log-form').addEventListener('submit', e => {
     size: $('#f-size').value.trim(),
     date: $('#f-date').value,
     rating: formRating,
-    notes: [...formNotes],
+    notes: [...allNotes],
     enjoyed: $('#f-enjoyed').value.trim(),
     pairing: $('#f-pairing').value.trim(),
     again: $('#f-again').checked,
+    detail,
     created: id ? (logs.find(x => x.id === id)?.created || Date.now()) : Date.now(),
   };
   if (id) logs = logs.map(x => x.id === id ? entry : x);
@@ -498,7 +623,7 @@ function renderJournal() {
   $('#search').style.display = '';
   const q = $('#search').value.trim().toLowerCase();
   const list = logs
-    .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.enjoyed, l.pairing, (l.notes || []).join(' ')].join(' ').toLowerCase().includes(q))
+    .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.enjoyed, l.pairing, (l.notes || []).join(' '), (l.detail?.thirds || []).map(t => t.text).join(' ')].join(' ').toLowerCase().includes(q))
     .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
 
   $('#journal-list').innerHTML = list.length ? list.map(l => `
@@ -508,7 +633,7 @@ function renderJournal() {
         ${starsHtml(l.rating)}
       </div>
       <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
-      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}</div>
+      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}${l.detail ? ' · Detailed notes' : ''}</div>
       ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
     </div>`).join('') : '<p class="muted">No cigars match that search.</p>';
 }
@@ -536,6 +661,7 @@ function openDetail(id) {
     </dl>
     ${l.notes?.length ? `<div class="chips" style="margin-bottom:12px">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
     ${l.enjoyed ? `<div class="quote">${esc(l.enjoyed)}</div>` : ''}
+    ${detailHtml(l.detail)}
     <div class="btn-row" style="margin-top:16px">
       <button class="btn danger" data-act="delete">Delete</button>
       <button class="btn ghost" data-act="close">Close</button>
