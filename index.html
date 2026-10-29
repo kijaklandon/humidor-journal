@@ -115,13 +115,21 @@
   .empty .big { font-size: 44px; }
 
   .badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
+  .tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .tag.ok { border-color: #6f9a5a; color: #9cc884; }
+  .tag.warn { border-color: var(--danger); color: var(--danger); }
+  .tag.mine { border-color: var(--accent); color: var(--accent); }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .filters select { font-size: 14px; padding: 9px 26px 9px 10px; background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; }
+  #browse-list h3 { margin-top: 20px; }
   ul.reasons { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
   ul.reasons li { margin: 2px 0; }
 
   /* Bottom tabs */
   nav.tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    display: grid; grid-template-columns: repeat(4, 1fr);
+    display: grid; grid-template-columns: repeat(5, 1fr);
     background: rgba(28,21,16,.96); backdrop-filter: blur(10px);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
@@ -209,6 +217,22 @@
     </form>
   </section>
 
+  <!-- BROWSE THE VAULT -->
+  <section id="view-browse" class="view">
+    <h2>Cigar vault</h2>
+    <input type="search" id="b-search" placeholder="Search brand, line, factory, flavor…" style="margin-bottom:8px">
+    <div class="filters">
+      <select id="b-wrapper" aria-label="Wrapper"></select>
+      <select id="b-strength" aria-label="Strength"></select>
+      <select id="b-origin" aria-label="Country"></select>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span id="b-count" class="muted" style="font-size:14px"></span>
+      <button class="btn small ghost" id="b-reset" type="button">Clear filters</button>
+    </div>
+    <div id="browse-list"></div>
+  </section>
+
   <!-- RECOMMENDATIONS -->
   <section id="view-recs" class="view">
     <h2>For you</h2>
@@ -228,6 +252,11 @@
       <input type="file" id="import-file" accept="application/json,.json" hidden>
     </div>
     <div class="card">
+      <div class="card-title">Your vault review</div>
+      <p class="muted" id="review-summary" style="margin:6px 0 12px"></p>
+      <button class="btn small ghost" id="copy-review">Copy reviews for Claude</button>
+    </div>
+    <div class="card">
       <div class="card-title">Add to your iPhone home screen</div>
       <p class="muted" style="margin:6px 0 0">Open this app in Safari, tap the Share button, then choose <b>Add to Home Screen</b>. It will open full screen like a regular app.</p>
     </div>
@@ -242,6 +271,7 @@
 <nav class="tabs">
   <button data-view="journal" class="active"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></svg>Journal</button>
   <button data-view="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log</button>
+  <button data-view="browse"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Browse</button>
   <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
   <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>More</button>
 </nav>
@@ -306,6 +336,8 @@ function show(view) {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   if (view === 'journal') renderJournal();
   if (view === 'recs') renderRecs();
+  if (view === 'browse') renderBrowse();
+  if (view === 'more') renderReviewSummary();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
@@ -564,12 +596,8 @@ function scoreCigar(c, p) {
 }
 
 function renderRecs() {
-  const smoked = new Set();
-  logs.forEach(l => {
-    smoked.add(l.name.toLowerCase());
-    smoked.add(`${l.brand} ${l.name}`.toLowerCase());
-  });
-  const untried = CATALOG.filter(c => !smoked.has(fullName(c).toLowerCase()) && !smoked.has(c.n.toLowerCase()));
+  const smoked = smokedSet();
+  const untried = CATALOG.filter(c => !isSmoked(c, smoked));
 
   if (!logs.length) {
     const starters = untried.filter(c => c.s <= 3).slice(0, 5);
@@ -619,9 +647,167 @@ $('#recs').addEventListener('click', e => {
   show('add');
 });
 
+// ---------- Browse the vault ----------
+// Brand is part of the match so "Ashton Classic" doesn't also mark "AVO Classic"
+function smokedSet() {
+  const s = new Set();
+  logs.forEach(l => s.add((l.brand ? `${l.brand} ${l.name}` : l.name).toLowerCase()));
+  return s;
+}
+const isSmoked = (c, s) => s.has(fullName(c).toLowerCase()) || s.has(c.n.toLowerCase());
+
+// Your "looks right / needs a fix" notes on vault entries, keyed by full name
+const REVIEW_KEY = 'humidor.reviews.v1';
+let reviews = (() => {
+  try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch { return {}; }
+})();
+function saveReviews() {
+  try { localStorage.setItem(REVIEW_KEY, JSON.stringify(reviews)); }
+  catch { toast('Could not save on this device'); }
+}
+
+$('#b-wrapper').innerHTML = '<option value="">Wrapper</option>' + WRAPPERS.map(w => `<option>${w}</option>`).join('');
+$('#b-strength').innerHTML = '<option value="">Strength</option>' + STRENGTHS.map((s, i) => `<option value="${i + 1}">${s}</option>`).join('');
+$('#b-origin').innerHTML = '<option value="">Country</option>' + ORIGINS.map(o => `<option>${o}</option>`).join('');
+['#b-search', '#b-wrapper', '#b-strength', '#b-origin'].forEach(sel => {
+  $(sel).addEventListener('input', renderBrowse);
+  $(sel).addEventListener('change', renderBrowse);
+});
+$('#b-reset').addEventListener('click', () => {
+  ['#b-search', '#b-wrapper', '#b-strength', '#b-origin'].forEach(sel => $(sel).value = '');
+  renderBrowse();
+});
+
+function renderBrowse() {
+  const q = $('#b-search').value.trim().toLowerCase();
+  const w = $('#b-wrapper').value, s = +$('#b-strength').value, o = $('#b-origin').value;
+  const smoked = smokedSet();
+  const list = CATALOG
+    .filter(c => (!w || c.w === w) && (!s || c.s === s) && (!o || c.o === o) &&
+      (!q || [c.b, c.n, c.fac, c.w, c.o, c.notes.join(' ')].join(' ').toLowerCase().includes(q)))
+    .sort((a, b) => a.b.localeCompare(b.b) || a.n.localeCompare(b.n));
+
+  $('#b-count').textContent = `${list.length} of ${CATALOG.length} cigars`;
+  $('#b-reset').style.visibility = (q || w || s || o) ? 'visible' : 'hidden';
+
+  let html = '', brand = null;
+  for (const c of list) {
+    if (c.b !== brand) { brand = c.b; html += `<h3>${esc(brand)}</h3>`; }
+    const r = reviews[fullName(c)];
+    const tags = [
+      isSmoked(c, smoked) ? '<span class="tag mine">Smoked</span>' : '',
+      c.status === 'limited' ? '<span class="tag">Limited</span>' : '',
+      c.status === 'discontinued' ? '<span class="tag">Discontinued</span>' : '',
+      r?.status === 'ok' || c.verified ? '<span class="tag ok">✓ Right</span>' : '',
+      r?.status === 'fix' ? '<span class="tag warn">Needs fix</span>' : '',
+    ].join('');
+    html += `
+      <div class="card tap" data-cig="${esc(fullName(c))}">
+        <div class="row">
+          <div class="card-title">${esc(c.n)}</div>
+          <div class="tags">${tags}</div>
+        </div>
+        <div class="card-sub">${esc(c.w)} · ${esc(c.o)} · ${STRENGTHS[c.s - 1]}</div>
+      </div>`;
+  }
+  $('#browse-list').innerHTML = html || '<p class="muted">No cigars match. Try clearing a filter.</p>';
+}
+$('#browse-list').addEventListener('click', e => {
+  const card = e.target.closest('[data-cig]');
+  if (card) openCigar(card.dataset.cig);
+});
+
+function openCigar(name) {
+  const c = CATALOG.find(x => fullName(x) === name);
+  if (!c) return;
+  const r = reviews[name] || {};
+  const status = { limited: 'Limited / hard to find', discontinued: 'Discontinued' }[c.status];
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin:0">${esc(c.n)}</h2>
+    <div class="card-sub">${esc(c.b)}${status ? ' · ' + status : ''}</div>
+    <dl class="kv">
+      <dt>Wrapper</dt><dd>${esc(c.w)}</dd>
+      ${c.bi ? `<dt>Binder</dt><dd>${esc(c.bi)}</dd>` : ''}
+      ${c.f ? `<dt>Filler</dt><dd>${esc(c.f)}</dd>` : ''}
+      <dt>Made in</dt><dd>${esc(c.o)}</dd>
+      ${c.fac ? `<dt>Factory</dt><dd>${esc(c.fac)}</dd>` : ''}
+      <dt>Strength</dt><dd>${STRENGTHS[c.s - 1]}</dd>
+    </dl>
+    <div class="chips">${c.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>
+    <p class="muted" style="font-size:13px;margin:12px 0 0">
+      ${c.checked ? 'Blend confirmed from published specs.' : 'Blend details are our best knowledge, not yet confirmed.'}
+      Flavors and strength are general consensus.
+    </p>
+    <h3>Your review</h3>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn small ${r.status === 'ok' ? '' : 'ghost'}" data-act="ok">✓ Looks right</button>
+      <button class="btn small ${r.status === 'fix' ? '' : 'ghost'}" data-act="fix">Needs a fix</button>
+    </div>
+    <div style="display:${r.status === 'fix' ? 'block' : 'none'};margin-top:10px">
+      <textarea id="fix-note" placeholder="What's off? e.g. Strength should be Full, more cedar than cocoa">${esc(r.note || '')}</textarea>
+      <button class="btn small" data-act="save-fix" style="margin-top:8px">Save note</button>
+    </div>
+    ${r.status ? '<button class="btn small ghost" data-act="clear" style="margin-top:10px;border:none;padding-left:0">Clear my review</button>' : ''}
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn ghost" data-act="close">Close</button>
+      <button class="btn" data-act="log">Log this cigar</button>
+    </div>`;
+  $('#sheet-body').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    if (act === 'close') return closeSheet();
+    if (act === 'log') { closeSheet(); resetForm(c); show('add'); return; }
+    if (act === 'ok') { reviews[name] = { status: 'ok', at: Date.now() }; toast('Marked as right'); }
+    if (act === 'fix') reviews[name] = { status: 'fix', note: r.note || '', at: Date.now() };
+    if (act === 'save-fix') { reviews[name] = { status: 'fix', note: $('#fix-note').value.trim(), at: Date.now() }; toast('Note saved'); }
+    if (act === 'clear') delete reviews[name];
+    saveReviews();
+    renderBrowse();
+    openCigar(name);
+    if (act === 'fix') $('#fix-note').focus();
+  };
+  $('#sheet').classList.add('open');
+}
+
+// ---------- Review summary (More page) ----------
+function reviewText() {
+  const ok = [], fix = [];
+  for (const [name, r] of Object.entries(reviews)) {
+    if (r.status === 'ok') ok.push(`- ${name}`);
+    if (r.status === 'fix') fix.push(`- ${name}${r.note ? ': ' + r.note : ''}`);
+  }
+  return [`Humidor vault review (${today()})`,
+    fix.length ? '\nNeeds a fix:\n' + fix.join('\n') : '',
+    ok.length ? '\nLooks right:\n' + ok.join('\n') : ''].join('\n').trim();
+}
+function renderReviewSummary() {
+  const vals = Object.values(reviews);
+  const ok = vals.filter(r => r.status === 'ok').length;
+  const fix = vals.filter(r => r.status === 'fix').length;
+  $('#review-summary').textContent = ok || fix
+    ? `You've marked ${ok} as right and ${fix} as needing a fix. Copy them and paste into your chat with Claude to update the vault.`
+    : 'Open any cigar in Browse and mark it "Looks right" or "Needs a fix". Your reviews collect here.';
+  $('#copy-review').style.display = ok || fix ? '' : 'none';
+}
+$('#copy-review').addEventListener('click', async () => {
+  const text = reviewText();
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Older browsers: copy through a temporary text box
+    const t = document.createElement('textarea');
+    t.value = text;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    t.remove();
+  }
+  toast('Copied. Paste it to Claude');
+});
+
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `humidor-backup-${today()}.json`;
@@ -640,6 +826,10 @@ $('#import-file').addEventListener('change', async e => {
     const added = incoming.filter(l => l && l.id && l.name && !ids.has(l.id));
     logs = logs.concat(added);
     save();
+    if (data.reviews && typeof data.reviews === 'object') {
+      reviews = { ...data.reviews, ...reviews };
+      saveReviews();
+    }
     toast(`Imported ${added.length} cigar${added.length === 1 ? '' : 's'}`);
   } catch {
     toast("That file doesn't look like a backup");
@@ -647,10 +837,12 @@ $('#import-file').addEventListener('change', async e => {
   e.target.value = '';
 });
 $('#clear-btn').addEventListener('click', () => {
-  if (!logs.length) { toast('Nothing to delete'); return; }
-  if (confirm('Delete every cigar in your journal? This cannot be undone. Export a backup first if you want to keep them.')) {
+  if (!logs.length && !Object.keys(reviews).length) { toast('Nothing to delete'); return; }
+  if (confirm('Delete every cigar in your journal and all your vault reviews? This cannot be undone. Export a backup first if you want to keep them.')) {
     logs = [];
     save();
+    reviews = {};
+    saveReviews();
     toast('All data deleted');
     show('journal');
   }
