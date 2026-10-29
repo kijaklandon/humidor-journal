@@ -141,17 +141,11 @@
   .ach-desc { font-size: 13px; color: var(--muted); line-height: 1.3; }
   .bar { height: 6px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
   .bar span { display: block; height: 100%; background: var(--accent); }
-  .track-head { display: flex; align-items: center; gap: 10px; }
-  .track-head .count { margin-left: auto; font-weight: 700; color: var(--accent); font-size: 18px; }
-  .track-bar, .track-steps { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4px; }
-  .track-bar { margin: 12px 0 8px; }
-  .track-bar div { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-  .track-bar span { display: block; height: 100%; background: var(--accent); }
-  .step { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 3px; }
-  .step .num { font-weight: 700; font-size: 14px; }
-  .step .name { font-size: 10px; color: var(--muted); line-height: 1.25; }
-  .step.done .name { color: var(--text); }
-  .step .check { width: 20px; height: 20px; font-size: 12px; }
+  .stat-num { flex: none; font-weight: 700; font-size: 20px; color: var(--accent); white-space: nowrap; align-self: flex-start; }
+  .stat-num .chev { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .pips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .pip { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .pip.on { border-color: var(--accent); color: var(--accent); }
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
   .seg button { background: none; border: none; border-radius: 9px; padding: 9px 0; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
   .seg button.on { background: var(--accent); color: var(--accent-ink); }
@@ -1222,94 +1216,126 @@ let earned = (() => {
 
 const DARK = ['Maduro', 'Broadleaf', 'San Andrés'];
 const distinctCount = arr => new Set(arr.filter(Boolean)).size;
-const brandCount = () => distinctCount(logs.map(l => (l.brand || '').trim().toLowerCase()));
+const brandOf = l => (l.brand || '').trim();
+const brandCount = () => distinctCount(logs.map(l => brandOf(l).toLowerCase()));
 const countryCount = () => distinctCount(logs.map(l => l.origin).filter(o => o !== 'Other'));
-const wrapperCount = () => distinctCount(logs.map(l => l.wrapper).filter(w => w !== 'Other'));
 const invTotal = () => inventory.reduce((s, i) => s + i.qty, 0);
-const has = test => logs.some(test) ? 1 : 0;
-function maxPerBrand() {
-  const counts = {};
-  logs.forEach(l => { const b = (l.brand || '').trim().toLowerCase(); if (b) counts[b] = (counts[b] || 0) + 1; });
-  return Math.max(0, ...Object.values(counts));
-}
 const vaultEntry = l => CATALOG.find(c => fullName(c).toLowerCase() === `${l.brand} ${l.name}`.trim().toLowerCase());
+const isPerfect = l => l.detail?.draw === 5 && l.detail?.burn === 5;
 
-const ACHIEVEMENTS = [
-  { id: 'first', title: 'First Light', desc: 'Log your first cigar', p: () => [logs.length, 1] },
-  { id: 'ten', title: 'Regular', desc: 'Log 10 cigars', p: () => [logs.length, 10] },
-  { id: 'twentyfive', title: 'Aficionado', desc: 'Log 25 cigars', p: () => [logs.length, 25] },
-  { id: 'fifty', title: 'Connoisseur', desc: 'Log 50 cigars', p: () => [logs.length, 50] },
-  { id: 'hundred', title: 'Century Club', desc: 'Log 100 cigars', p: () => [logs.length, 100] },
-  { id: 'brands5', title: 'Brand Explorer', desc: 'Smoke 5 different brands', p: () => [brandCount(), 5] },
-  { id: 'brands15', title: 'Brand Collector', desc: 'Smoke 15 different brands', p: () => [brandCount(), 15] },
-  { id: 'brands30', title: 'Brand Master', desc: 'Smoke 30 different brands', p: () => [brandCount(), 30] },
-  { id: 'loyal', title: 'Loyalist', desc: 'Smoke 5 cigars from one brand', p: () => [maxPerBrand(), 5] },
-  { id: 'countries3', title: 'Passport', desc: 'Cigars from 3 countries', p: () => [countryCount(), 3] },
-  { id: 'countries5', title: 'Globetrotter', desc: 'Cigars from 5 countries', p: () => [countryCount(), 5] },
-  { id: 'cuban', title: 'Habanos Hunter', desc: 'Smoke a Cuban cigar', p: () => [has(l => l.origin === 'Cuba'), 1] },
-  { id: 'wrappers5', title: 'Wrapper Spectrum', desc: 'Try 5 wrapper types', p: () => [wrapperCount(), 5] },
-  { id: 'wrappers8', title: 'Full Spectrum', desc: 'Try 8 wrapper types', p: () => [wrapperCount(), 8] },
-  { id: 'lightdark', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [has(l => l.wrapper === 'Connecticut') + has(l => DARK.includes(l.wrapper)), 2] },
-  { id: 'full', title: 'Full Throttle', desc: 'Smoke a full-strength cigar', p: () => [has(l => l.strength === 5), 1] },
-  { id: 'ladder', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
-  { id: 'limited', title: 'Unicorn Hunter', desc: 'Smoke a limited release', p: () => [has(l => vaultEntry(l)?.status === 'limited'), 1] },
-  { id: 'fivestar', title: 'Five Stars', desc: 'Give a cigar 5 stars', p: () => [has(l => l.rating === 5), 1] },
-  { id: 'critic', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [has(l => l.rating <= 2), 1] },
-  { id: 'notes', title: 'Note Taker', desc: 'Log 5 cigars with detailed notes', p: () => [logs.filter(l => l.detail).length, 5] },
-  { id: 'thirds', title: 'Thirds Master', desc: 'Note all three thirds on 5 cigars', p: () => [logs.filter(l => l.detail?.thirds?.every(t => t.notes.length || t.text)).length, 5] },
-  { id: 'perfect', title: 'Perfect Smoke', desc: 'Score a 5 for both draw and burn', p: () => [has(l => l.detail?.draw === 5 && l.detail?.burn === 5), 1] },
-  { id: 'pairing', title: 'Pairing Pro', desc: 'Log 10 cigars with a pairing', p: () => [logs.filter(l => l.pairing).length, 10] },
-  { id: 'stocked', title: 'Stocked Up', desc: 'Have 10 cigars in your humidor', p: () => [invTotal(), 10] },
-  { id: 'collector', title: 'Collector', desc: 'Have 25 cigars in your humidor', p: () => [invTotal(), 25] },
-  { id: 'reviewer', title: 'Critic\'s Eye', desc: 'Review 10 cigars in the vault', p: () => [Object.keys(reviews).length, 10] },
-];
-const isDone = a => { const [have, need] = a.p(); return have >= need; };
-const achById = id => ACHIEVEMENTS.find(a => a.id === id);
+// Most cigars ever held at once, so the humidor stat doesn't drop as you smoke
+const PEAK_KEY = 'humidor.peak.v1';
+let humidorPeak = +localStorage.getItem(PEAK_KEY) || 0;
+function updatePeak() {
+  if (invTotal() <= humidorPeak) return;
+  humidorPeak = invTotal();
+  try { localStorage.setItem(PEAK_KEY, humidorPeak); } catch {}
+}
 
-// Achievements that build on each other share one bar with checkpoints.
-// Everything not in a track is shown as a one-off challenge.
-const TRACKS = [
-  { name: 'Cigars logged', value: () => logs.length, ids: ['first', 'ten', 'twentyfive', 'fifty', 'hundred'] },
-  { name: 'Brands tried', value: brandCount, ids: ['brands5', 'brands15', 'brands30'] },
-  { name: 'Countries', value: countryCount, ids: ['countries3', 'countries5'] },
-  { name: 'Wrapper types', value: wrapperCount, ids: ['wrappers5', 'wrappers8'] },
-  { name: 'Humidor', value: invTotal, ids: ['stocked', 'collector'] },
-];
-const inTrack = new Set(TRACKS.flatMap(t => t.ids));
-
-function trackHtml(t) {
-  const value = t.value();
-  const steps = t.ids.map(achById).map(a => ({ a, need: a.p()[1], done: !!earned[a.id] || isDone(a) }));
-  const fills = steps.map((s, i) => {
-    if (s.done) return 1;
-    const lower = i ? steps[i - 1].need : 0;
-    return Math.max(0, Math.min(1, (value - lower) / (s.need - lower)));
+// Group logs by a field, biggest group first: [[label, logs], ...]
+function groupLogs(key, skip) {
+  const groups = {};
+  logs.forEach(l => {
+    const k = key(l);
+    if (!k || k === skip) return;
+    (groups[k.toLowerCase()] ||= [k, []])[1].push(l);
   });
+  return Object.values(groups).sort((a, b) => b[1].length - a[1].length);
+}
+
+// Every stat is a track with checkpoints. `list` gives the cigars behind the
+// number; `groups` gives the brands, countries or wrappers behind it.
+const TRACKS = [
+  { id: 'logs', name: 'Cigars logged', steps: [1, 10, 25, 50, 100, 250], list: () => logs },
+  { id: 'brands', name: 'Brands tried', steps: [5, 15, 30, 50], groups: () => groupLogs(brandOf) },
+  { id: 'countries', name: 'Countries', steps: [3, 5, 6], groups: () => groupLogs(l => l.origin, 'Other') },
+  { id: 'wrappers', name: 'Wrapper types', steps: [3, 5, 8], groups: () => groupLogs(l => l.wrapper, 'Other') },
+  { id: 'limited', name: 'Limited releases', steps: [1, 5, 10, 25], list: () => logs.filter(l => vaultEntry(l)?.status === 'limited') },
+  { id: 'cuban', name: 'Cubans', steps: [1, 5, 10, 25], list: () => logs.filter(l => l.origin === 'Cuba') },
+  { id: 'full', name: 'Full-strength cigars', steps: [1, 10, 25], list: () => logs.filter(l => l.strength === 5) },
+  { id: 'fivestar', name: '5-star cigars', steps: [1, 10, 25], list: () => logs.filter(l => l.rating === 5) },
+  { id: 'loyal', name: 'Most from one brand', steps: [5, 10, 25], groups: () => groupLogs(brandOf),
+    value: () => groupLogs(brandOf)[0]?.[1].length || 0, note: () => groupLogs(brandOf)[0]?.[0] },
+  { id: 'notes', name: 'Detailed notes', steps: [5, 25, 50], list: () => logs.filter(l => l.detail) },
+  { id: 'perfect', name: 'Perfect smokes', desc: '5 for both draw and burn', steps: [1, 5, 10], list: () => logs.filter(isPerfect) },
+  { id: 'pairing', name: 'Pairings logged', steps: [10, 25, 50], list: () => logs.filter(l => l.pairing) },
+  { id: 'humidor', name: 'Humidor', desc: 'Most cigars held at once', steps: [10, 25, 50, 100], value: () => Math.max(humidorPeak, invTotal()) },
+  { id: 'reviews', name: 'Vault reviews', steps: [10, 50, 100], value: () => Object.keys(reviews).length },
+];
+const trackValue = t => t.value ? t.value() : t.list ? t.list().length : t.groups().length;
+
+// One-time goals that aren't really counts
+const CHALLENGES = [
+  { id: 'ladder', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
+  { id: 'lightdark', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [(logs.some(l => l.wrapper === 'Connecticut') ? 1 : 0) + (logs.some(l => DARK.includes(l.wrapper)) ? 1 : 0), 2] },
+  { id: 'critic', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [logs.some(l => l.rating <= 2) ? 1 : 0, 1] },
+];
+
+// Everything you can earn: each track checkpoint, plus each challenge
+const allGoals = () => [
+  ...TRACKS.flatMap(t => t.steps.map(s => ({ key: `${t.id}:${s}`, label: `${t.name} · ${s}`, done: () => trackValue(t) >= s }))),
+  ...CHALLENGES.map(c => ({ key: c.id, label: c.title, done: () => { const [h, n] = c.p(); return h >= n; } })),
+];
+
+// Achievements earned under the earlier one-badge-each system map onto checkpoints
+const OLD_IDS = {
+  first: 'logs:1', ten: 'logs:10', twentyfive: 'logs:25', fifty: 'logs:50', hundred: 'logs:100',
+  brands5: 'brands:5', brands15: 'brands:15', brands30: 'brands:30', loyal: 'loyal:5',
+  countries3: 'countries:3', countries5: 'countries:5', cuban: 'cuban:1', wrappers5: 'wrappers:5', wrappers8: 'wrappers:8',
+  full: 'full:1', limited: 'limited:1', fivestar: 'fivestar:1', notes: 'notes:5', perfect: 'perfect:1',
+  pairing: 'pairing:10', stocked: 'humidor:10', collector: 'humidor:25', reviewer: 'reviews:10', thirds: null,
+};
+function migrateEarned() {
+  let changed = false;
+  for (const [old, now] of Object.entries(OLD_IDS)) {
+    if (!(old in earned)) continue;
+    if (now && !earned[now]) earned[now] = earned[old];
+    delete earned[old];
+    changed = true;
+  }
+  if (changed) try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
+}
+
+function checkAchievements(silent) {
+  updatePeak();
+  const fresh = allGoals().filter(g => !earned[g.key] && g.done());
+  if (!fresh.length) return;
+  fresh.forEach(g => earned[g.key] = Date.now());
+  try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
+  // Wait for the "saved" toast to finish before celebrating
+  if (!silent) setTimeout(() => toast(fresh.length === 1
+    ? `Achievement unlocked: ${fresh[0].label}`
+    : `${fresh.length} achievements unlocked`), 1500);
+}
+
+function trackRow(t) {
+  const value = trackValue(t);
+  const passed = s => value >= s || !!earned[`${t.id}:${s}`];
+  const next = t.steps.find(s => !passed(s));
+  const i = t.steps.indexOf(next);
+  const lower = i > 0 ? t.steps[i - 1] : 0;
+  const pct = next ? Math.max(0, Math.min(1, (value - lower) / (next - lower))) : 1;
+  const tappable = t.list || t.groups;
   return `
-    <div class="card" style="--n:${steps.length}">
-      <div class="track-head">
-        <span class="card-title">${t.name}</span>
-        <span class="count">${value}</span>
+    <div class="ach-row" ${tappable ? `data-track="${t.id}" style="cursor:pointer"` : ''}>
+      <div class="grow">
+        <div class="ach-title">${t.name}</div>
+        <div class="ach-desc">${esc([t.note?.(), t.desc, next ? `Next: ${next}` : 'Every checkpoint complete'].filter(Boolean).join(' · '))}</div>
+        <div class="bar"><span style="width:${Math.round(pct * 100)}%"></span></div>
+        <div class="pips">${t.steps.map(s => `<span class="pip ${passed(s) ? 'on' : ''}">${passed(s) ? '✓ ' : ''}${s}</span>`).join('')}</div>
       </div>
-      <div class="track-bar">${fills.map(f => `<div><span style="width:${Math.round(f * 100)}%"></span></div>`).join('')}</div>
-      <div class="track-steps">${steps.map(s => `
-        <div class="step ${s.done ? 'done' : ''}" title="${esc(s.a.desc)}">
-          <span class="check ${s.done ? 'on' : ''}">${s.done ? '✓' : ''}</span>
-          <span class="num">${s.need}</span>
-          <span class="name">${s.a.title}</span>
-        </div>`).join('')}
-      </div>
+      <div class="stat-num">${value}${tappable ? '<span class="chev">›</span>' : ''}</div>
     </div>`;
 }
 
-function challengeRow(a) {
-  const [have, need] = a.p();
-  const done = !!earned[a.id] || have >= need;
+function challengeRow(c) {
+  const [have, need] = c.p();
+  const done = !!earned[c.id] || have >= need;
   return `
     <div class="ach-row">
       <div class="grow">
-        <div class="ach-title">${a.title}</div>
-        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-title">${c.title}</div>
+        <div class="ach-desc">${c.desc}</div>
         ${!done && need > 1 ? `<div class="bar"><span style="width:${Math.round(Math.min(have, need) / need * 100)}%"></span></div>
           <div class="ach-desc" style="margin-top:2px">${Math.min(have, need)} / ${need}</div>` : ''}
       </div>
@@ -1317,17 +1343,45 @@ function challengeRow(a) {
     </div>`;
 }
 
-function checkAchievements(silent) {
-  const fresh = ACHIEVEMENTS.filter(a => !earned[a.id] && isDone(a));
-  if (!fresh.length) return;
-  fresh.forEach(a => earned[a.id] = Date.now());
-  try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
-  // Wait for the "saved" toast to finish before celebrating
-  if (!silent) setTimeout(() => toast(fresh.length === 1
-    ? `Achievement unlocked: ${fresh[0].title}`
-    : `${fresh.length} achievements unlocked`), 1500);
+// Tap a stat to see what's behind the number
+function openStatList(id) {
+  const t = TRACKS.find(x => x.id === id);
+  if (!t) return;
+  const byDate = (a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created;
+  const body = t.list
+    ? [...t.list()].sort(byDate).map(l => `
+        <div class="ach-row" data-log="${l.id}" style="cursor:pointer">
+          <div class="grow">
+            <div class="ach-title">${esc(l.name)}</div>
+            <div class="ach-desc">${esc([l.brand, fmtDate(l.date)].filter(Boolean).join(' · '))}</div>
+          </div>
+          ${starsHtml(l.rating)}
+        </div>`).join('')
+    : t.groups().map(([label, ls]) => {
+        const names = [...new Set(ls.map(l => l.name))];
+        return `
+        <div class="ach-row">
+          <div class="grow">
+            <div class="ach-title">${esc(label)}</div>
+            <div class="ach-desc">${esc(names.slice(0, 3).join(', '))}${names.length > 3 ? '…' : ''}</div>
+          </div>
+          <div class="stat-num">${ls.length}</div>
+        </div>`;
+      }).join('');
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin:0">${t.name}</h2>
+    <div class="card-sub" style="margin-bottom:8px">${trackValue(t)} so far</div>
+    ${body || '<p class="muted">Nothing here yet.</p>'}
+    <button class="btn block ghost" data-act="close" style="margin-top:14px">Close</button>`;
+  $('#sheet-body').onclick = e => {
+    if (e.target.closest('[data-act="close"]')) return closeSheet();
+    const row = e.target.closest('[data-log]');
+    if (row) openDetail(row.dataset.log);
+  };
+  $('#sheet').classList.add('open');
 }
 
+let showAllEarned = false;
 function renderProfile() {
   const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
   const sub = [profile.location, profile.since ? `Smoking since ${profile.since}` : ''].filter(Boolean).join(' · ');
@@ -1338,9 +1392,10 @@ function renderProfile() {
     profile.wrapper && `Wrapper: ${profile.wrapper}`,
   ].filter(Boolean);
   const avg = logs.length ? (logs.reduce((s, l) => s + l.rating, 0) / logs.length).toFixed(1) : '–';
-  const done = ACHIEVEMENTS.filter(a => earned[a.id] || isDone(a))
-    .sort((x, y) => (earned[y.id] || 0) - (earned[x.id] || 0));
-  const fmtDay = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const goals = allGoals();
+  const done = goals.filter(g => earned[g.key]).sort((a, b) => earned[b.key] - earned[a.key]);
+  const shown = showAllEarned ? done : done.slice(0, 5);
+  const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
   $('#profile').innerHTML = `
     <div class="card">
@@ -1363,28 +1418,30 @@ function renderProfile() {
       <div class="stat"><b>${invTotal()}</b><small>In humidor</small></div>
       <div class="stat"><b>${done.length}</b><small>Achievements</small></div>
     </div>
-    <h3>Earned ✓ · ${done.length} of ${ACHIEVEMENTS.length}</h3>
+    <h3>Earned ✓ · ${done.length} of ${goals.length}</h3>
     <div class="card">
-      ${done.length ? done.map(a => `
+      ${shown.length ? shown.map(g => `
         <div class="ach-row">
           <div class="grow">
-            <div class="ach-title">${a.title}</div>
-            <div class="ach-desc">${a.desc}${earned[a.id] ? ' · ' + fmtDay(earned[a.id]) : ''}</div>
+            <div class="ach-title">${esc(g.label)}</div>
+            <div class="ach-desc">${fmtDay(earned[g.key])}</div>
           </div>
           <span class="check on">✓</span>
         </div>`).join('') : '<p class="muted" style="margin:0">Log your first cigar to start earning.</p>'}
+      ${done.length > 5 ? `<button class="btn small ghost" data-act="all-earned" style="margin-top:8px">${showAllEarned ? 'Show fewer' : `Show all ${done.length}`}</button>` : ''}
     </div>
-    <h3>Tracks</h3>
-    ${TRACKS.map(trackHtml).join('')}
+    <h3>Your stats</h3>
+    <div class="card">${TRACKS.map(trackRow).join('')}</div>
     <h3>Challenges</h3>
     <div class="card">
-      ${ACHIEVEMENTS.filter(a => !inTrack.has(a.id))
-        .sort((x, y) => (isDone(x) || earned[x.id] ? 1 : 0) - (isDone(y) || earned[y.id] ? 1 : 0))
-        .map(challengeRow).join('')}
+      ${[...CHALLENGES].sort((x, y) => (earned[x.id] ? 1 : 0) - (earned[y.id] ? 1 : 0)).map(challengeRow).join('')}
     </div>`;
 }
 $('#profile').addEventListener('click', e => {
-  if (e.target.closest('[data-act="edit-profile"]')) openProfileForm();
+  if (e.target.closest('[data-act="edit-profile"]')) return openProfileForm();
+  if (e.target.closest('[data-act="all-earned"]')) { showAllEarned = !showAllEarned; return renderProfile(); }
+  const row = e.target.closest('[data-track]');
+  if (row) openStatList(row.dataset.track);
 });
 
 function openProfileForm() {
@@ -1468,6 +1525,7 @@ $('#import-file').addEventListener('change', async e => {
     }
     if (data.achievements && typeof data.achievements === 'object') {
       earned = { ...data.achievements, ...earned };
+      migrateEarned();
       try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
     }
     toast(`Imported ${added.length} cigar${added.length === 1 ? '' : 's'}`);
@@ -1488,7 +1546,11 @@ $('#clear-btn').addEventListener('click', () => {
     profile = {};
     saveProfile();
     earned = {};
-    try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
+    humidorPeak = 0;
+    try {
+      localStorage.setItem(ACH_KEY, JSON.stringify(earned));
+      localStorage.removeItem(PEAK_KEY);
+    } catch {}
     toast('All data deleted');
     show('journal');
   }
@@ -1497,7 +1559,8 @@ $('#clear-btn').addEventListener('click', () => {
 // ---------- Start ----------
 resetForm();
 renderJournal();
-// Quietly credit anything already earned before achievements existed
+// Carry over badges from the old system, then quietly credit anything already earned
+migrateEarned();
 checkAchievements(true);
 </script>
 </body>
