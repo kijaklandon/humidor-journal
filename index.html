@@ -127,16 +127,33 @@
     font: 700 24px Georgia, serif;
   }
   .stats.six { grid-template-columns: repeat(3, 1fr); }
-  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .ach { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 6px; text-align: center; }
-  .ach.locked { border-color: var(--border); }
-  .ach.locked .ach-icon { filter: grayscale(1); opacity: .45; }
-  .ach.locked .ach-title { color: var(--muted); }
-  .ach-icon { font-size: 28px; line-height: 1.2; }
-  .ach-title { font-weight: 650; font-size: 13px; margin-top: 4px; }
-  .ach-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
-  .bar { height: 5px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  /* Achievements: earned list, tiered tracks, one-off challenges */
+  .check {
+    width: 24px; height: 24px; border-radius: 50%; flex: none;
+    border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: var(--accent-ink);
+  }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .ach-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .ach-row:first-of-type { border-top: none; padding-top: 2px; }
+  .ach-icon { font-size: 26px; width: 34px; text-align: center; flex: none; }
+  .ach-row .grow { flex: 1; min-width: 0; }
+  .ach-title { font-weight: 650; font-size: 15px; }
+  .ach-desc { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .ach-row.todo .ach-icon { filter: grayscale(1); opacity: .5; }
+  .bar { height: 6px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
   .bar span { display: block; height: 100%; background: var(--accent); }
+  .track-head { display: flex; align-items: center; gap: 10px; }
+  .track-head .count { margin-left: auto; font-weight: 700; color: var(--accent); font-size: 18px; }
+  .track-bar, .track-steps { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4px; }
+  .track-bar { margin: 12px 0 8px; }
+  .track-bar div { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+  .track-bar span { display: block; height: 100%; background: var(--accent); }
+  .step { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 3px; }
+  .step .num { font-weight: 700; font-size: 14px; }
+  .step .name { font-size: 10px; color: var(--muted); line-height: 1.25; }
+  .step.done .name { color: var(--text); }
+  .step .check { width: 20px; height: 20px; font-size: 12px; }
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
   .seg button { background: none; border: none; border-radius: 9px; padding: 9px 0; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
   .seg button.on { background: var(--accent); color: var(--accent-ink); }
@@ -1249,6 +1266,60 @@ const ACHIEVEMENTS = [
   { id: 'reviewer', icon: '🔍', title: 'Critic\'s Eye', desc: 'Review 10 cigars in the vault', p: () => [Object.keys(reviews).length, 10] },
 ];
 const isDone = a => { const [have, need] = a.p(); return have >= need; };
+const achById = id => ACHIEVEMENTS.find(a => a.id === id);
+
+// Achievements that build on each other share one bar with checkpoints.
+// Everything not in a track is shown as a one-off challenge.
+const TRACKS = [
+  { icon: '🔥', name: 'Cigars logged', value: () => logs.length, ids: ['first', 'ten', 'twentyfive', 'fifty', 'hundred'] },
+  { icon: '🧭', name: 'Brands tried', value: brandCount, ids: ['brands5', 'brands15', 'brands30'] },
+  { icon: '🛂', name: 'Countries', value: countryCount, ids: ['countries3', 'countries5'] },
+  { icon: '🍂', name: 'Wrapper types', value: wrapperCount, ids: ['wrappers5', 'wrappers8'] },
+  { icon: '🗄️', name: 'Humidor', value: invTotal, ids: ['stocked', 'collector'] },
+];
+const inTrack = new Set(TRACKS.flatMap(t => t.ids));
+
+function trackHtml(t) {
+  const value = t.value();
+  const steps = t.ids.map(achById).map(a => ({ a, need: a.p()[1], done: !!earned[a.id] || isDone(a) }));
+  const fills = steps.map((s, i) => {
+    if (s.done) return 1;
+    const lower = i ? steps[i - 1].need : 0;
+    return Math.max(0, Math.min(1, (value - lower) / (s.need - lower)));
+  });
+  return `
+    <div class="card" style="--n:${steps.length}">
+      <div class="track-head">
+        <span class="ach-icon" style="width:auto">${t.icon}</span>
+        <span class="card-title">${t.name}</span>
+        <span class="count">${value}</span>
+      </div>
+      <div class="track-bar">${fills.map(f => `<div><span style="width:${Math.round(f * 100)}%"></span></div>`).join('')}</div>
+      <div class="track-steps">${steps.map(s => `
+        <div class="step ${s.done ? 'done' : ''}" title="${esc(s.a.desc)}">
+          <span class="check ${s.done ? 'on' : ''}">${s.done ? '✓' : ''}</span>
+          <span class="num">${s.need}</span>
+          <span class="name"><span style="font-size:16px">${s.a.icon}</span><br>${s.a.title}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function challengeRow(a) {
+  const [have, need] = a.p();
+  const done = !!earned[a.id] || have >= need;
+  return `
+    <div class="ach-row ${done ? '' : 'todo'}">
+      <span class="ach-icon">${a.icon}</span>
+      <div class="grow">
+        <div class="ach-title">${a.title}</div>
+        <div class="ach-desc">${a.desc}</div>
+        ${!done && need > 1 ? `<div class="bar"><span style="width:${Math.round(Math.min(have, need) / need * 100)}%"></span></div>
+          <div class="ach-desc" style="margin-top:2px">${Math.min(have, need)} / ${need}</div>` : ''}
+      </div>
+      <span class="check ${done ? 'on' : ''}">${done ? '✓' : ''}</span>
+    </div>`;
+}
 
 function checkAchievements(silent) {
   const fresh = ACHIEVEMENTS.filter(a => !earned[a.id] && isDone(a));
@@ -1271,10 +1342,9 @@ function renderProfile() {
     profile.wrapper && `Wrapper: ${profile.wrapper}`,
   ].filter(Boolean);
   const avg = logs.length ? (logs.reduce((s, l) => s + l.rating, 0) / logs.length).toFixed(1) : '–';
-  const done = ACHIEVEMENTS.filter(a => earned[a.id] || isDone(a));
-  const locked = ACHIEVEMENTS.filter(a => !done.includes(a))
-    .map(a => { const [h, n] = a.p(); return { a, h: Math.min(h, n), n }; })
-    .sort((x, y) => y.h / y.n - x.h / x.n);
+  const done = ACHIEVEMENTS.filter(a => earned[a.id] || isDone(a))
+    .sort((x, y) => (earned[y.id] || 0) - (earned[x.id] || 0));
+  const fmtDay = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
   $('#profile').innerHTML = `
     <div class="card">
@@ -1297,23 +1367,25 @@ function renderProfile() {
       <div class="stat"><b>${invTotal()}</b><small>In humidor</small></div>
       <div class="stat"><b>${done.length}</b><small>Achievements</small></div>
     </div>
-    <h3>Achievements · ${done.length} of ${ACHIEVEMENTS.length}</h3>
-    <div class="ach-grid">
-      ${done.map(a => `
-        <div class="ach">
-          <div class="ach-icon">${a.icon}</div>
-          <div class="ach-title">${a.title}</div>
-          <div class="ach-desc">${a.desc}</div>
-          ${earned[a.id] ? `<div class="ach-desc" style="color:var(--accent)">${new Date(earned[a.id]).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
-        </div>`).join('')}
-      ${locked.map(({ a, h, n }) => `
-        <div class="ach locked">
-          <div class="ach-icon">${a.icon}</div>
-          <div class="ach-title">${a.title}</div>
-          <div class="ach-desc">${a.desc}</div>
-          <div class="bar"><span style="width:${Math.round(h / n * 100)}%"></span></div>
-          <div class="ach-desc">${h} / ${n}</div>
-        </div>`).join('')}
+    <h3>Earned ✓ · ${done.length} of ${ACHIEVEMENTS.length}</h3>
+    <div class="card">
+      ${done.length ? done.map(a => `
+        <div class="ach-row">
+          <span class="ach-icon">${a.icon}</span>
+          <div class="grow">
+            <div class="ach-title">${a.title}</div>
+            <div class="ach-desc">${a.desc}${earned[a.id] ? ' · ' + fmtDay(earned[a.id]) : ''}</div>
+          </div>
+          <span class="check on">✓</span>
+        </div>`).join('') : '<p class="muted" style="margin:0">Log your first cigar to start earning.</p>'}
+    </div>
+    <h3>Tracks</h3>
+    ${TRACKS.map(trackHtml).join('')}
+    <h3>Challenges</h3>
+    <div class="card">
+      ${ACHIEVEMENTS.filter(a => !inTrack.has(a.id))
+        .sort((x, y) => (isDone(x) || earned[x.id] ? 1 : 0) - (isDone(y) || earned[y.id] ? 1 : 0))
+        .map(challengeRow).join('')}
     </div>`;
 }
 $('#profile').addEventListener('click', e => {
