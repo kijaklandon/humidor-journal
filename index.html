@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Humidor">
+<meta name="theme-color" content="#17110d">
+<title>Humidor Journal</title>
+<style>
+  :root {
+    --bg: #17110d;
+    --surface: #231a14;
+    --surface-2: #2e231b;
+    --border: #3a2d23;
+    --text: #f3e9dc;
+    --muted: #b5a493;
+    --accent: #d99a4e;
+    --accent-ink: #1f140b;
+    --danger: #d0604a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px; line-height: 1.45;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
+  }
+  header.top {
+    position: sticky; top: 0; z-index: 5;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+    background: rgba(23,17,13,.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  header.top h1 { margin: 0; font-size: 20px; letter-spacing: .3px; font-family: Georgia, "Times New Roman", serif; }
+  header.top h1 span { color: var(--accent); }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  h2 { font-family: Georgia, serif; font-size: 22px; margin: 4px 0 12px; }
+  h3 { font-size: 15px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  p.muted, .muted { color: var(--muted); }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+  }
+  .card.tap { cursor: pointer; }
+  .card.tap:active { background: var(--surface-2); }
+  .card-title { font-weight: 650; font-size: 17px; }
+  .card-sub { color: var(--muted); font-size: 14px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 20px; color: var(--accent); }
+  .stat small { color: var(--muted); font-size: 12px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip {
+    font-size: 13px; padding: 4px 10px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  }
+  button.chip { cursor: pointer; font: inherit; font-size: 14px; padding: 7px 12px; }
+  button.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+
+  .stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
+  .stars .off { color: #5a4636; }
+
+  /* Forms */
+  label.field { display: block; margin-bottom: 14px; }
+  label.field > span { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+  input[type=text], input[type=date], input[type=search], select, textarea {
+    width: 100%; font: inherit; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 12px; outline: none; -webkit-appearance: none; appearance: none;
+  }
+  select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 90px; resize: vertical; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .range-label { color: var(--accent); font-weight: 600; }
+
+  .rating-input { display: flex; gap: 4px; }
+  .rating-input button {
+    background: none; border: none; font-size: 34px; line-height: 1; padding: 2px;
+    color: #5a4636; cursor: pointer;
+  }
+  .rating-input button.on { color: var(--accent); }
+
+  .toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
+
+  .btn {
+    display: inline-block; font: inherit; font-weight: 650; border-radius: 12px; cursor: pointer;
+    padding: 13px 18px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+  .btn.small { padding: 8px 12px; font-size: 14px; }
+  .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  .empty { text-align: center; padding: 36px 16px; }
+  .empty .big { font-size: 44px; }
+
+  .badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
+  ul.reasons { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+  ul.reasons li { margin: 2px 0; }
+
+  /* Bottom tabs */
+  nav.tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(28,21,16,.96); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav.tabs button {
+    background: none; border: none; color: var(--muted); font: inherit; font-size: 12px;
+    padding: 9px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
+  }
+  nav.tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  nav.tabs button.active { color: var(--accent); }
+
+  /* Detail sheet */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
+  .backdrop.open { display: flex; }
+  .sheet {
+    width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto;
+    background: var(--surface); border-top-left-radius: 20px; border-top-right-radius: 20px;
+    border: 1px solid var(--border); padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; font-size: 15px; margin: 12px 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .quote { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 30;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="top"><h1>Humidor <span>Journal</span></h1></header>
+
+<main>
+  <!-- JOURNAL -->
+  <section id="view-journal" class="view active">
+    <div id="stats" class="stats"></div>
+    <input type="search" id="search" placeholder="Search your cigars, notes, wrappers…" style="margin-bottom:14px">
+    <div id="journal-list"></div>
+  </section>
+
+  <!-- LOG A CIGAR -->
+  <section id="view-add" class="view">
+    <h2 id="form-title">Log a cigar</h2>
+    <form id="log-form" autocomplete="off">
+      <input type="hidden" id="f-id">
+      <label class="field"><span>Cigar name</span>
+        <input type="text" id="f-name" list="catalog-list" placeholder="Start typing, e.g. Padrón 1964" required>
+        <datalist id="catalog-list"></datalist>
+      </label>
+      <label class="field"><span>Brand</span>
+        <input type="text" id="f-brand" placeholder="e.g. Arturo Fuente">
+      </label>
+      <div class="two">
+        <label class="field"><span>Wrapper</span><select id="f-wrapper"></select></label>
+        <label class="field"><span>Country</span><select id="f-origin"></select></label>
+      </div>
+      <label class="field"><span>Strength: <span id="f-strength-label" class="range-label"></span></span>
+        <input type="range" id="f-strength" min="1" max="5" step="1" value="3">
+      </label>
+      <div class="two">
+        <label class="field"><span>Size / vitola</span><input type="text" id="f-size" placeholder="e.g. Robusto"></label>
+        <label class="field"><span>Date smoked</span><input type="date" id="f-date"></label>
+      </div>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
+        <div class="rating-input" id="f-rating"></div>
+      </div>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Flavors you picked up</span>
+        <div class="chips" id="f-notes"></div>
+      </div>
+      <label class="field"><span>What did you enjoy (or not)?</span>
+        <textarea id="f-enjoyed" placeholder="Smooth draw, big cocoa in the second third, a little harsh at the end…"></textarea>
+      </label>
+      <label class="field"><span>Paired with (optional)</span>
+        <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
+      </label>
+      <label class="toggle field"><input type="checkbox" id="f-again"> <span style="margin:0;color:var(--text)">I'd smoke this again</span></label>
+      <div class="btn-row">
+        <button type="button" class="btn ghost" id="f-cancel">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- RECOMMENDATIONS -->
+  <section id="view-recs" class="view">
+    <h2>For you</h2>
+    <div id="recs"></div>
+  </section>
+
+  <!-- MORE -->
+  <section id="view-more" class="view">
+    <h2>More</h2>
+    <div class="card">
+      <div class="card-title">Your data</div>
+      <p class="muted" style="margin:6px 0 12px">Your journal is saved on this device. Make a backup now and then so you never lose it.</p>
+      <div class="btn-row">
+        <button class="btn small ghost" id="export-btn">Export backup</button>
+        <button class="btn small ghost" id="import-btn">Import backup</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+    <div class="card">
+      <div class="card-title">Add to your iPhone home screen</div>
+      <p class="muted" style="margin:6px 0 0">Open this app in Safari, tap the Share button, then choose <b>Add to Home Screen</b>. It will open full screen like a regular app.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">About recommendations</div>
+      <p class="muted" style="margin:6px 0 0">Suggestions come from your ratings, wrappers, countries, strength and flavor notes, matched against a built-in list of popular cigars. Flavor profiles are general guides; every cigar smokes a little differently.</p>
+    </div>
+    <button class="btn danger block" id="clear-btn">Delete all my data</button>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="journal" class="active"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></svg>Journal</button>
+  <button data-view="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log</button>
+  <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
+  <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>More</button>
+</nav>
+
+<div class="backdrop" id="sheet"><div class="sheet" id="sheet-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="catalog.js"></script>
+<script>
+// ---------- Reference data ----------
+const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
+// Wrappers in the same family count as a partial match when recommending
+const WRAPPER_FAMILY = {
+  Connecticut: 'light', Candela: 'light',
+  Cameroon: 'medium', Sumatra: 'medium', Habano: 'medium', Corojo: 'medium', Rosado: 'medium',
+  Maduro: 'dark', Broadleaf: 'dark', 'San Andrés': 'dark'
+};
+const ORIGINS = ['Nicaragua', 'Dominican Republic', 'Honduras', 'Cuba', 'Mexico', 'USA', 'Other'];
+const STRENGTHS = ['Mild', 'Mild-Medium', 'Medium', 'Medium-Full', 'Full'];
+const NOTES = ['Cedar', 'Leather', 'Cocoa', 'Coffee', 'Pepper', 'Spice', 'Cream', 'Nuts', 'Earth', 'Sweet', 'Wood', 'Toast', 'Honey', 'Citrus', 'Floral', 'Fruit'];
+
+// CATALOG (the built-in cigar list) lives in catalog.js
+const fullName = c => `${c.b} ${c.n}`;
+
+// ---------- Storage ----------
+const KEY = 'humidor.v1';
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(logs)); }
+  catch { toast('Could not save on this device'); }
+}
+let logs = load();
+
+// ---------- Helpers ----------
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const starsHtml = r => '<span class="stars">' + '★'.repeat(r) + '<span class="off">' + '★'.repeat(5 - r) + '</span></span>';
+function today() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+const fmtDate = s => s ? new Date(s + 'T00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function findCatalog(text) {
+  const q = text.trim().toLowerCase();
+  if (!q) return null;
+  return CATALOG.find(c => fullName(c).toLowerCase() === q) || null;
+}
+
+// ---------- Navigation ----------
+function show(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  if (view === 'journal') renderJournal();
+  if (view === 'recs') renderRecs();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.view === 'add') resetForm();
+  show(b.dataset.view);
+}));
+
+// ---------- Form ----------
+let formRating = 0;
+let formNotes = new Set();
+
+$('#f-wrapper').innerHTML = WRAPPERS.map(w => `<option>${w}</option>`).join('');
+$('#f-origin').innerHTML = ORIGINS.map(o => `<option>${o}</option>`).join('');
+$('#catalog-list').innerHTML = CATALOG.map(c => `<option value="${esc(fullName(c))}">`).join('');
+
+function renderRatingInput() {
+  $('#f-rating').innerHTML = [1, 2, 3, 4, 5].map(i =>
+    `<button type="button" data-r="${i}" class="${i <= formRating ? 'on' : ''}" aria-label="${i} stars">★</button>`).join('');
+}
+$('#f-rating').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  formRating = +b.dataset.r;
+  renderRatingInput();
+});
+
+function renderNotesInput() {
+  $('#f-notes').innerHTML = NOTES.map(n =>
+    `<button type="button" class="chip ${formNotes.has(n) ? 'on' : ''}" data-n="${n}">${n}</button>`).join('');
+}
+$('#f-notes').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const n = b.dataset.n;
+  formNotes.has(n) ? formNotes.delete(n) : formNotes.add(n);
+  renderNotesInput();
+});
+
+const updateStrengthLabel = () => $('#f-strength-label').textContent = STRENGTHS[$('#f-strength').value - 1];
+$('#f-strength').addEventListener('input', updateStrengthLabel);
+
+// Picking a known cigar fills in its details
+$('#f-name').addEventListener('change', () => {
+  const c = findCatalog($('#f-name').value);
+  if (!c) return;
+  $('#f-name').value = c.n;
+  $('#f-brand').value = c.b;
+  $('#f-wrapper').value = c.w;
+  $('#f-origin').value = c.o;
+  $('#f-strength').value = c.s;
+  updateStrengthLabel();
+  if (!formNotes.size) { formNotes = new Set(c.notes); renderNotesInput(); }
+});
+
+function resetForm(prefill) {
+  $('#log-form').reset();
+  $('#f-id').value = '';
+  $('#form-title').textContent = 'Log a cigar';
+  $('#f-date').value = today();
+  $('#f-strength').value = 3;
+  formRating = 0;
+  formNotes = new Set();
+  if (prefill) {
+    $('#f-name').value = prefill.n;
+    $('#f-brand').value = prefill.b;
+    $('#f-wrapper').value = prefill.w;
+    $('#f-origin').value = prefill.o;
+    $('#f-strength').value = prefill.s;
+    formNotes = new Set(prefill.notes);
+  }
+  updateStrengthLabel();
+  renderRatingInput();
+  renderNotesInput();
+}
+
+function editLog(id) {
+  const l = logs.find(x => x.id === id);
+  if (!l) return;
+  resetForm();
+  $('#form-title').textContent = 'Edit cigar';
+  $('#f-id').value = l.id;
+  $('#f-name').value = l.name;
+  $('#f-brand').value = l.brand || '';
+  $('#f-wrapper').value = l.wrapper;
+  $('#f-origin').value = l.origin;
+  $('#f-strength').value = l.strength;
+  $('#f-size').value = l.size || '';
+  $('#f-date').value = l.date || '';
+  $('#f-enjoyed').value = l.enjoyed || '';
+  $('#f-pairing').value = l.pairing || '';
+  $('#f-again').checked = !!l.again;
+  formRating = l.rating;
+  formNotes = new Set(l.notes || []);
+  updateStrengthLabel();
+  renderRatingInput();
+  renderNotesInput();
+  closeSheet();
+  show('add');
+}
+
+$('#log-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!formRating) { toast('Give it a star rating'); return; }
+  const id = $('#f-id').value;
+  const entry = {
+    id: id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: $('#f-name').value.trim(),
+    brand: $('#f-brand').value.trim(),
+    wrapper: $('#f-wrapper').value,
+    origin: $('#f-origin').value,
+    strength: +$('#f-strength').value,
+    size: $('#f-size').value.trim(),
+    date: $('#f-date').value,
+    rating: formRating,
+    notes: [...formNotes],
+    enjoyed: $('#f-enjoyed').value.trim(),
+    pairing: $('#f-pairing').value.trim(),
+    again: $('#f-again').checked,
+    created: id ? (logs.find(x => x.id === id)?.created || Date.now()) : Date.now(),
+  };
+  if (id) logs = logs.map(x => x.id === id ? entry : x);
+  else logs.push(entry);
+  save();
+  toast(id ? 'Updated' : 'Added to your journal');
+  show('journal');
+});
+$('#f-cancel').addEventListener('click', () => show('journal'));
+
+// ---------- Journal ----------
+$('#search').addEventListener('input', renderJournal);
+
+function topKey(counts) {
+  let best = null, max = 0;
+  for (const [k, v] of Object.entries(counts)) if (v > max) { best = k; max = v; }
+  return best;
+}
+
+function renderJournal() {
+  const avg = logs.length ? (logs.reduce((s, l) => s + l.rating, 0) / logs.length).toFixed(1) : '–';
+  const wrapperCounts = {};
+  logs.filter(l => l.rating >= 4).forEach(l => wrapperCounts[l.wrapper] = (wrapperCounts[l.wrapper] || 0) + 1);
+  $('#stats').innerHTML = `
+    <div class="stat"><b>${logs.length}</b><small>Smoked</small></div>
+    <div class="stat"><b>${avg}</b><small>Avg rating</small></div>
+    <div class="stat"><b style="font-size:15px;line-height:26px">${esc(topKey(wrapperCounts) || '–')}</b><small>Fav wrapper</small></div>`;
+
+  if (!logs.length) {
+    $('#search').style.display = 'none';
+    $('#journal-list').innerHTML = `
+      <div class="empty card">
+        <div class="big">🍂</div>
+        <h2>Your humidor is empty</h2>
+        <p class="muted">Log the cigars you smoke and what you liked about them. After a few, you'll get personal recommendations.</p>
+        <button class="btn" onclick="resetForm(); show('add')">Log your first cigar</button>
+      </div>`;
+    return;
+  }
+  $('#search').style.display = '';
+  const q = $('#search').value.trim().toLowerCase();
+  const list = logs
+    .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.enjoyed, l.pairing, (l.notes || []).join(' ')].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
+
+  $('#journal-list').innerHTML = list.length ? list.map(l => `
+    <div class="card tap" data-id="${l.id}">
+      <div class="row">
+        <div class="card-title">${esc(l.name)}</div>
+        ${starsHtml(l.rating)}
+      </div>
+      <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
+      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}</div>
+      ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
+    </div>`).join('') : '<p class="muted">No cigars match that search.</p>';
+}
+
+$('#journal-list').addEventListener('click', e => {
+  const card = e.target.closest('[data-id]');
+  if (card) openDetail(card.dataset.id);
+});
+
+// ---------- Detail sheet ----------
+function openDetail(id) {
+  const l = logs.find(x => x.id === id);
+  if (!l) return;
+  $('#sheet-body').innerHTML = `
+    <div class="row"><h2 style="margin:0">${esc(l.name)}</h2>${starsHtml(l.rating)}</div>
+    <div class="card-sub">${esc(l.brand)}</div>
+    <dl class="kv">
+      <dt>Wrapper</dt><dd>${esc(l.wrapper)}</dd>
+      <dt>Country</dt><dd>${esc(l.origin)}</dd>
+      <dt>Strength</dt><dd>${STRENGTHS[l.strength - 1]}</dd>
+      ${l.size ? `<dt>Size</dt><dd>${esc(l.size)}</dd>` : ''}
+      <dt>Smoked</dt><dd>${fmtDate(l.date)}</dd>
+      ${l.pairing ? `<dt>Paired with</dt><dd>${esc(l.pairing)}</dd>` : ''}
+      <dt>Again?</dt><dd>${l.again ? 'Yes' : 'Not sure / no'}</dd>
+    </dl>
+    ${l.notes?.length ? `<div class="chips" style="margin-bottom:12px">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
+    ${l.enjoyed ? `<div class="quote">${esc(l.enjoyed)}</div>` : ''}
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn danger" data-act="delete">Delete</button>
+      <button class="btn ghost" data-act="close">Close</button>
+      <button class="btn" data-act="edit">Edit</button>
+    </div>`;
+  $('#sheet-body').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'close') closeSheet();
+    if (act === 'edit') editLog(id);
+    if (act === 'delete' && confirm(`Delete ${l.name} from your journal?`)) {
+      logs = logs.filter(x => x.id !== id);
+      save();
+      closeSheet();
+      renderJournal();
+      toast('Deleted');
+    }
+  };
+  $('#sheet').classList.add('open');
+}
+function closeSheet() { $('#sheet').classList.remove('open'); }
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+
+// ---------- Recommendations ----------
+// Each log pushes its attributes up (rated 4-5) or down (rated 1-2).
+function buildProfile() {
+  const p = { wrapper: {}, family: {}, origin: {}, notes: {}, strength: 3 };
+  const add = (obj, k, v) => { if (k) obj[k] = (obj[k] || 0) + v; };
+  let sSum = 0, sW = 0;
+  for (const l of logs) {
+    const w = (l.rating - 3) + (l.again ? 0.5 : 0);
+    add(p.wrapper, l.wrapper, w);
+    add(p.family, WRAPPER_FAMILY[l.wrapper], w);
+    add(p.origin, l.origin, w);
+    (l.notes || []).forEach(n => add(p.notes, n, w));
+    if (w > 0) { sSum += l.strength * w; sW += w; }
+  }
+  if (sW) p.strength = sSum / sW;
+  else if (logs.length) p.strength = logs.reduce((s, l) => s + l.strength, 0) / logs.length;
+  return p;
+}
+
+function scoreCigar(c, p) {
+  const wrapper = (p.wrapper[c.w] || 0) * 1.5;
+  const family = (p.family[WRAPPER_FAMILY[c.w]] || 0) * 0.5;
+  const origin = (p.origin[c.o] || 0) * 0.8;
+  const likedNotes = c.notes.filter(n => (p.notes[n] || 0) > 0);
+  const notes = c.notes.reduce((s, n) => s + (p.notes[n] || 0) * 0.7, 0);
+  const sDiff = Math.abs(c.s - p.strength);
+  const strength = 2 - sDiff * 1.5;
+
+  const reasons = [];
+  if (likedNotes.length) reasons.push(`Flavors you enjoy: ${likedNotes.join(', ').toLowerCase()}`);
+  if (wrapper > 0) reasons.push(`You rate ${c.w} wrappers highly`);
+  else if (family > 0) reasons.push(`Similar wrapper style to ones you like`);
+  if (sDiff <= 0.75) reasons.push(`${STRENGTHS[c.s - 1]}, right where you like it`);
+  if (origin > 0) reasons.push(`You enjoy tobacco from ${c.o}`);
+  return { c, score: wrapper + family + origin + notes + strength, reasons };
+}
+
+function renderRecs() {
+  const smoked = new Set();
+  logs.forEach(l => {
+    smoked.add(l.name.toLowerCase());
+    smoked.add(`${l.brand} ${l.name}`.toLowerCase());
+  });
+  const untried = CATALOG.filter(c => !smoked.has(fullName(c).toLowerCase()) && !smoked.has(c.n.toLowerCase()));
+
+  if (!logs.length) {
+    const starters = untried.filter(c => c.s <= 3).slice(0, 5);
+    $('#recs').innerHTML = `
+      <div class="card"><p class="muted" style="margin:0">Log a few cigars and rate them. The more you log, the better these get. Here are some well-loved places to start:</p></div>
+      ${starters.map(c => recCard({ c, reasons: [STRENGTHS[c.s - 1] + ' · ' + c.notes.join(', ').toLowerCase()] })).join('')}`;
+    return;
+  }
+
+  const p = buildProfile();
+  const ranked = untried.map(c => scoreCigar(c, p)).sort((a, b) => b.score - a.score).slice(0, 8);
+  const topNotes = Object.entries(p.notes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k]) => k);
+  const favWrapper = topKey(Object.fromEntries(Object.entries(p.wrapper).filter(([, v]) => v > 0)));
+
+  $('#recs').innerHTML = `
+    <div class="card">
+      <div class="card-title">Your taste so far</div>
+      <div class="card-sub" style="margin-top:4px">
+        Strength: <b style="color:var(--text)">${STRENGTHS[Math.round(p.strength) - 1]}</b>
+        ${favWrapper ? ` · Wrapper: <b style="color:var(--text)">${esc(favWrapper)}</b>` : ''}
+      </div>
+      ${topNotes.length ? `<div class="chips">${topNotes.map(n => `<span class="chip">${n}</span>`).join('')}</div>` : ''}
+      ${logs.length < 3 ? `<p class="muted" style="margin:10px 0 0;font-size:14px">Based on ${logs.length} cigar${logs.length > 1 ? 's' : ''}. Log a few more for sharper picks.</p>` : ''}
+    </div>
+    ${ranked.map((r, i) => recCard(r, i < 3)).join('')}`;
+}
+
+function recCard(r, top) {
+  const c = r.c;
+  return `
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="card-title">${esc(c.n)}</div>
+          <div class="card-sub">${esc(c.b)} · ${esc(c.w)} · ${esc(c.o)}</div>
+        </div>
+        ${top ? '<span class="badge">Top pick</span>' : ''}
+      </div>
+      ${r.reasons.length ? `<ul class="reasons">${r.reasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      <button class="btn small ghost" style="margin-top:10px" data-log="${esc(fullName(c))}">I smoked this, log it</button>
+    </div>`;
+}
+$('#recs').addEventListener('click', e => {
+  const b = e.target.closest('[data-log]');
+  if (!b) return;
+  resetForm(findCatalog(b.dataset.log));
+  show('add');
+});
+
+// ---------- Backup & reset ----------
+$('#export-btn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `humidor-backup-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('#import-btn').addEventListener('click', () => $('#import-file').click());
+$('#import-file').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const incoming = Array.isArray(data) ? data : data.logs;
+    if (!Array.isArray(incoming)) throw new Error();
+    const ids = new Set(logs.map(l => l.id));
+    const added = incoming.filter(l => l && l.id && l.name && !ids.has(l.id));
+    logs = logs.concat(added);
+    save();
+    toast(`Imported ${added.length} cigar${added.length === 1 ? '' : 's'}`);
+  } catch {
+    toast("That file doesn't look like a backup");
+  }
+  e.target.value = '';
+});
+$('#clear-btn').addEventListener('click', () => {
+  if (!logs.length) { toast('Nothing to delete'); return; }
+  if (confirm('Delete every cigar in your journal? This cannot be undone. Export a backup first if you want to keep them.')) {
+    logs = [];
+    save();
+    toast('All data deleted');
+    show('journal');
+  }
+});
+
+// ---------- Start ----------
+resetForm();
+renderJournal();
+</script>
+</body>
+</html>

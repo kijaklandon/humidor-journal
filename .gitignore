@@ -1,0 +1,6 @@
+# Journal backups exported from the app (personal data)
+humidor-backup-*.json
+
+# Windows clutter
+Thumbs.db
+desktop.ini
