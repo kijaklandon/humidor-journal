@@ -1240,7 +1240,6 @@ let earned = (() => {
   try { return JSON.parse(localStorage.getItem(ACH_KEY)) || {}; } catch { return {}; }
 })();
 
-const DARK = ['Maduro', 'Broadleaf', 'San Andrés'];
 const distinctCount = arr => new Set(arr.filter(Boolean)).size;
 const brandOf = l => (l.brand || '').trim();
 const brandCount = () => distinctCount(logs.map(l => brandOf(l).toLowerCase()));
@@ -1313,18 +1312,9 @@ function medal(t, level, size = 56) {
   return `<span class="medal ${level ? '' : 'locked'}" style="--c:${tier ? tier.color : 'var(--border)'};--s:${size}px">${num}</span>`;
 }
 
-// One-time goals that aren't really counts
-const CHALLENGES = [
-  { id: 'ladder', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
-  { id: 'lightdark', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [(logs.some(l => l.wrapper === 'Connecticut') ? 1 : 0) + (logs.some(l => DARK.includes(l.wrapper)) ? 1 : 0), 2] },
-  { id: 'critic', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [logs.some(l => l.rating <= 2) ? 1 : 0, 1] },
-];
-
-// Everything you can earn: each track checkpoint, plus each challenge
-const allGoals = () => [
-  ...TRACKS.flatMap(t => t.steps.map((s, i) => ({ key: `${t.id}:${s}`, label: `${t.name} · ${TIERS[i].name} (${s})`, done: () => trackValue(t) >= s }))),
-  ...CHALLENGES.map(c => ({ key: c.id, label: c.title, done: () => { const [h, n] = c.p(); return h >= n; } })),
-];
+// Everything you can earn: each checkpoint of each stat
+const allGoals = () => TRACKS.flatMap(t => t.steps.map((s, i) =>
+  ({ key: `${t.id}:${s}`, label: `${t.name} · ${TIERS[i].name} (${s})`, done: () => trackValue(t) >= s })));
 
 // Achievements earned under the earlier one-badge-each system map onto checkpoints
 const OLD_IDS = {
@@ -1333,6 +1323,8 @@ const OLD_IDS = {
   countries3: 'countries:3', countries5: 'countries:5', cuban: 'cuban:1', wrappers5: 'wrappers:5', wrappers8: 'wrappers:8',
   full: 'full:1', limited: 'limited:1', fivestar: 'fivestar:1', notes: 'notes:5', perfect: 'perfect:1',
   pairing: 'pairing:10', stocked: 'humidor:10', collector: 'humidor:25', reviewer: 'reviews:10', thirds: null,
+  // Challenges were retired
+  ladder: null, lightdark: null, critic: null,
 };
 function migrateEarned() {
   let changed = false;
@@ -1377,19 +1369,27 @@ function trackRow(t) {
     </div>`;
 }
 
-function challengeRow(c) {
-  const [have, need] = c.p();
-  const done = !!earned[c.id] || have >= need;
+function badgeTile(t) {
+  const level = badgeLevel(t);
+  const on = (profile.featured || []).includes(t.id) && level;
   return `
-    <div class="ach-row">
-      <div class="grow">
-        <div class="ach-title">${c.title}</div>
-        <div class="ach-desc">${c.desc}</div>
-        ${!done && need > 1 ? `<div class="bar"><span style="width:${Math.round(Math.min(have, need) / need * 100)}%"></span></div>
-          <div class="ach-desc" style="margin-top:2px">${Math.min(have, need)} / ${need}</div>` : ''}
-      </div>
-      <span class="check ${done ? 'on' : ''}">${done ? '✓' : ''}</span>
+    <div class="badge-tile ${level ? 'earned' : ''} ${on ? 'featured-on' : ''}" data-badge="${t.id}">
+      ${medal(t, level)}
+      <div class="badge-name">${t.name}</div>
+      <div class="badge-tier" style="${level ? `color:${TIERS[level - 1].color}` : ''}">${level ? TIERS[level - 1].name : `Locked · ${t.steps[0]}`}</div>
+      ${on ? '<div class="badge-flag">Featured</div>' : ''}
     </div>`;
+}
+
+// Highest tier first; ties go to whichever is closest to its next tier
+function rankedBadges() {
+  const progress = t => {
+    const level = badgeLevel(t), next = t.steps[level];
+    if (next === undefined) return 1;
+    const lower = level ? t.steps[level - 1] : 0;
+    return (trackValue(t) - lower) / (next - lower);
+  };
+  return [...TRACKS].sort((a, b) => badgeLevel(b) - badgeLevel(a) || progress(b) - progress(a));
 }
 
 // Tap a stat to see what's behind the number
@@ -1431,6 +1431,7 @@ function openStatList(id) {
 }
 
 let showAllEarned = false;
+let showAllBadges = false;
 function renderProfile() {
   const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
   const sub = [profile.location, profile.since ? `Smoking since ${profile.since}` : ''].filter(Boolean).join(' · ');
@@ -1447,6 +1448,7 @@ function renderProfile() {
   const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const featured = (profile.featured || []).map(id => TRACKS.find(t => t.id === id)).filter(t => t && badgeLevel(t));
   const badgeCount = TRACKS.filter(badgeLevel).length;
+  const badges = rankedBadges();
 
   $('#profile').innerHTML = `
     <div class="card">
@@ -1477,19 +1479,13 @@ function renderProfile() {
       <div class="stat"><b>${invTotal()}</b><small>In humidor</small></div>
       <div class="stat"><b>${done.length}</b><small>Achievements</small></div>
     </div>
+    <h3>Your stats</h3>
+    <div class="stat-list">${TRACKS.map(trackRow).join('')}</div>
     <h3>Badges · ${badgeCount} of ${TRACKS.length}</h3>
     <p class="muted" style="font-size:13px;margin:-2px 0 10px">Badges upgrade Bronze → Silver → Gold → Platinum → Diamond → Legend. Tap one to feature it (up to 3).</p>
-    <div class="badge-grid">${TRACKS.map(t => {
-      const level = badgeLevel(t);
-      const on = (profile.featured || []).includes(t.id) && level;
-      return `
-        <div class="badge-tile ${level ? 'earned' : ''} ${on ? 'featured-on' : ''}" data-badge="${t.id}">
-          ${medal(t, level)}
-          <div class="badge-name">${t.name}</div>
-          <div class="badge-tier" style="${level ? `color:${TIERS[level - 1].color}` : ''}">${level ? TIERS[level - 1].name : `Locked · ${t.steps[0]}`}</div>
-          ${on ? '<div class="badge-flag">Featured</div>' : ''}
-        </div>`;
-    }).join('')}</div>
+    <div class="badge-grid">${badges.slice(0, 3).map(badgeTile).join('')}</div>
+    ${showAllBadges ? `<div class="badge-grid">${badges.slice(3).map(badgeTile).join('')}</div>` : ''}
+    <button class="btn small ghost block" data-act="all-badges" style="margin:4px 0 6px">${showAllBadges ? 'Show fewer ▴' : `Show all ${TRACKS.length} badges ▾`}</button>
     <h3>Earned ✓ · ${done.length} of ${goals.length}</h3>
     <div class="card">
       ${shown.length ? shown.map(g => `
@@ -1501,17 +1497,12 @@ function renderProfile() {
           <span class="check on">✓</span>
         </div>`).join('') : '<p class="muted" style="margin:0">Log your first cigar to start earning.</p>'}
       ${done.length > 5 ? `<button class="btn small ghost" data-act="all-earned" style="margin-top:8px">${showAllEarned ? 'Show fewer' : `Show all ${done.length}`}</button>` : ''}
-    </div>
-    <h3>Your stats</h3>
-    <div class="stat-list">${TRACKS.map(trackRow).join('')}</div>
-    <h3>Challenges</h3>
-    <div class="card">
-      ${[...CHALLENGES].sort((x, y) => (earned[x.id] ? 1 : 0) - (earned[y.id] ? 1 : 0)).map(challengeRow).join('')}
     </div>`;
 }
 $('#profile').addEventListener('click', e => {
   if (e.target.closest('[data-act="edit-profile"]')) return openProfileForm();
   if (e.target.closest('[data-act="all-earned"]')) { showAllEarned = !showAllEarned; return renderProfile(); }
+  if (e.target.closest('[data-act="all-badges"]')) { showAllBadges = !showAllBadges; return renderProfile(); }
   const badge = e.target.closest('[data-badge]');
   if (badge) {
     const t = TRACKS.find(x => x.id === badge.dataset.badge);
