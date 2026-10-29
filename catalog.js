@@ -525,6 +525,88 @@ const CATALOG = [
   { b: 'Warped', n: 'Maestro del Tiempo', w: 'Corojo', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Aganorsa Leaf', s: 4, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'], status: 'discontinued', checked: true },
   { b: 'Warped', n: 'Futuro', w: 'Corojo', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Aganorsa Leaf', s: 4, notes: ['Spice', 'Cedar', 'Earth', 'Leather'], status: 'discontinued' },
 
+  // ----- Aging Room -----
+  { b: 'Aging Room', n: 'Quattro Nicaragua', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cedar', 'Spice', 'Sweet', 'Cream'], checked: true },
+  { b: 'Aging Room', n: 'Pura Cepa', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Plasencia Cigars', s: 4, notes: ['Pepper', 'Cedar', 'Earth', 'Sweet'], checked: true },
+
+  // ----- Alec Bradley (more) -----
+  { b: 'Alec Bradley', n: 'Black Market Estelí', w: 'Habano', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Earth', 'Cedar', 'Cocoa'] },
+
+  // ----- Arturo Fuente (more) -----
+  { b: 'Arturo Fuente', n: 'Opus X Angel\'s Share', w: 'Rosado', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Tabacalera A. Fuente', s: 4, notes: ['Cedar', 'Spice', 'Sweet', 'Leather'], status: 'limited' },
+  { b: 'Arturo Fuente', n: 'Sun Grown', w: 'Other', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Tabacalera A. Fuente', s: 3, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'], checked: true },
+  { b: 'Arturo Fuente', n: 'Chateau Fuente Sun Grown', w: 'Other', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Tabacalera A. Fuente', s: 4, notes: ['Cedar', 'Spice', 'Leather', 'Sweet'], checked: true },
+
+  // ----- Black Works Studio (Fabrica Oveja Negra, Nicaragua) -----
+  { b: 'Black Works Studio', n: 'NBK', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Fabrica Oveja Negra', s: 4, notes: ['Cocoa', 'Earth', 'Pepper', 'Leather'], checked: true },
+  { b: 'Black Works Studio', n: 'Killer Bee', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Fabrica Oveja Negra', s: 4, notes: ['Cocoa', 'Sweet', 'Pepper', 'Earth'], checked: true },
+  { b: 'Black Works Studio', n: 'Rorschach', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Fabrica Oveja Negra', s: 4, notes: ['Pepper', 'Cedar', 'Earth', 'Spice'], checked: true },
+  { b: 'Black Works Studio', n: 'S&R (Serpents and Rainbows)', w: 'Sumatra', bi: 'Nicaragua', f: 'Nicaragua, Dominican Republic', o: 'Nicaragua', fac: 'Fabrica Oveja Negra', s: 4, notes: ['Spice', 'Cedar', 'Sweet', 'Earth'], checked: true },
+
+  // ----- Camacho (more) -----
+  { b: 'Camacho', n: 'Diploma', w: 'Corojo', o: 'Honduras', s: 5, notes: ['Pepper', 'Earth', 'Leather', 'Spice'] },
+
+  // ----- Casa Turrent (Mexico) -----
+  { b: 'Casa Turrent', n: '1880 Claro', w: 'San Andrés', bi: 'Mexico', f: 'Mexico', o: 'Mexico', s: 3, notes: ['Cedar', 'Sweet', 'Earth', 'Nuts'] },
+  { b: 'Casa Turrent', n: '1880 Colorado', w: 'San Andrés', bi: 'Mexico', f: 'Mexico', o: 'Mexico', s: 3, notes: ['Earth', 'Sweet', 'Cedar', 'Spice'] },
+  { b: 'Casa Turrent', n: '1880 Maduro', w: 'San Andrés', bi: 'Mexico', f: 'Mexico', o: 'Mexico', s: 4, notes: ['Cocoa', 'Earth', 'Coffee', 'Sweet'] },
+
+  // ----- Cavalier Genève -----
+  { b: 'Cavalier Genève', n: 'White Series', w: 'Habano', bi: 'USA (Connecticut)', f: 'Dominican Republic, Nicaragua', o: 'Honduras', s: 3, notes: ['Cedar', 'Cream', 'Spice', 'Sweet'], checked: true },
+  { b: 'Cavalier Genève', n: 'Black Series II', w: 'San Andrés', o: 'Honduras', s: 4, notes: ['Cocoa', 'Earth', 'Sweet', 'Coffee'] },
+
+  // ----- Cuesta Rey -----
+  { b: 'Cuesta Rey', n: 'Centenario', w: 'Connecticut', o: 'Dominican Republic', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Wood'] },
+
+  // ----- Diamond Crown (more) -----
+  { b: 'Diamond Crown', n: 'Maximus', w: 'Other', o: 'Dominican Republic', s: 4, notes: ['Cedar', 'Spice', 'Leather', 'Sweet'] },
+
+  // ----- Don Diego -----
+  { b: 'Don Diego', n: 'Classic', w: 'Connecticut', o: 'Dominican Republic', s: 1, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
+
+  // ----- El Titan de Bronze (Miami, USA) -----
+  { b: 'El Titan de Bronze', n: 'Redemption', w: 'Habano', o: 'USA', fac: 'El Titan de Bronze', s: 4, notes: ['Cedar', 'Spice', 'Cocoa', 'Leather'] },
+
+  // ----- 601 by Espinosa (La Zona, Nicaragua) -----
+  { b: '601', n: 'Red Label Habano', w: 'Habano', o: 'Nicaragua', fac: 'La Zona', s: 4, notes: ['Pepper', 'Cedar', 'Earth', 'Sweet'] },
+  { b: '601', n: 'Blue Label Maduro', w: 'Maduro', o: 'Nicaragua', fac: 'La Zona', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Pepper'] },
+  { b: '601', n: 'La Bomba', w: 'Habano', o: 'Nicaragua', fac: 'La Zona', s: 5, notes: ['Pepper', 'Earth', 'Leather', 'Spice'] },
+
+  // ----- Flor de Copán (Honduras) -----
+  { b: 'Flor de Copán', n: 'Classic', w: 'Habano', o: 'Honduras', s: 3, notes: ['Earth', 'Cedar', 'Sweet', 'Wood'] },
+
+  // ----- La Aurora / León Jimenes (Dominican Republic) -----
+  { b: 'La Aurora', n: '107', w: 'Habano', o: 'Dominican Republic', fac: 'La Aurora', s: 4, notes: ['Cedar', 'Spice', 'Leather', 'Sweet'] },
+  { b: 'La Aurora', n: '1495 Series', w: 'Habano', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cedar', 'Cream', 'Spice', 'Nuts'] },
+  { b: 'La Aurora', n: 'Cameroon Selection', w: 'Cameroon', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cedar', 'Sweet', 'Spice', 'Nuts'] },
+  { b: 'León Jimenes', n: 'Classic', w: 'Connecticut', o: 'Dominican Republic', fac: 'La Aurora', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+
+  // ----- La Galera (Dominican Republic) -----
+  { b: 'La Galera', n: 'Habano', w: 'Habano', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'] },
+  { b: 'La Galera', n: 'Connecticut', w: 'Connecticut', o: 'Dominican Republic', s: 2, notes: ['Cream', 'Nuts', 'Cedar', 'Toast'] },
+  { b: 'La Galera', n: 'Maduro', w: 'Maduro', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Earth', 'Sweet', 'Coffee'] },
+
+  // ----- Perdomo (more) -----
+  { b: 'Perdomo', n: 'Fresco Connecticut', w: 'Connecticut', o: 'Nicaragua', fac: 'Tabacalera Perdomo', s: 2, notes: ['Cream', 'Nuts', 'Wood', 'Cedar'] },
+  { b: 'Perdomo', n: 'Fresco Sun Grown', w: 'Habano', o: 'Nicaragua', fac: 'Tabacalera Perdomo', s: 3, notes: ['Cedar', 'Spice', 'Wood', 'Earth'] },
+  { b: 'Perdomo', n: 'Fresco Maduro', w: 'Maduro', o: 'Nicaragua', fac: 'Tabacalera Perdomo', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Wood'] },
+
+  // ----- Quesada (Dominican Republic) -----
+  { b: 'Quesada', n: 'Tributo', w: 'Habano', bi: 'Honduras', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Cream', 'Sweet'], checked: true },
+  { b: 'Quesada', n: 'Oktoberfest', w: 'San Andrés', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Earth', 'Sweet', 'Spice'], status: 'limited', checked: true },
+  { b: 'Quesada', n: 'Q d\'Etat', w: 'Other', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Earth', 'Spice', 'Sweet'] },
+
+  // ----- Rocky Patel (more) -----
+  { b: 'Rocky Patel', n: 'Prohibition', w: 'Broadleaf', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Earth', 'Pepper', 'Sweet'] },
+
+  // ----- San Lotano Requiem (AJ Fernandez) -----
+  { b: 'AJ Fernandez', n: 'San Lotano Requiem Habano', w: 'Habano', o: 'Nicaragua', fac: 'Tabacalera AJ Fernandez', s: 4, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
+  { b: 'AJ Fernandez', n: 'San Lotano Requiem Maduro', w: 'Maduro', o: 'Nicaragua', fac: 'Tabacalera AJ Fernandez', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'] },
+  { b: 'AJ Fernandez', n: 'San Lotano Requiem Connecticut', w: 'Connecticut', o: 'Nicaragua', fac: 'Tabacalera AJ Fernandez', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Pepper'] },
+
+  // ----- Vega Fina -----
+  { b: 'Vega Fina', n: 'Nicaragua', w: 'Habano', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Earth', 'Cedar', 'Leather'] },
+
   // ===== Cuban (Habanos S.A. — all Cuban tobacco, mostly Vuelta Abajo) =====
   // Cuban brands are listed by their best-known sizes, since each size is famous on its own.
   { b: 'Bolívar', n: 'Belicosos Finos', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Cocoa', 'Spice'] },
@@ -635,4 +717,31 @@ const CATALOG = [
   { b: 'Vegas Robaina', n: 'Únicos', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Spice', 'Cocoa'] },
   { b: 'Vegueros', n: 'Entretiempos', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Sweet', 'Cedar', 'Spice'] },
   { b: 'Vegueros', n: 'Tapados', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Sweet', 'Cedar', 'Wood'] },
+  { b: 'Vegueros', n: 'Mañanitas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Sweet', 'Spice', 'Cedar'] },
+  { b: 'Bolívar', n: 'Petit Coronas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Cocoa', 'Spice'] },
+  { b: 'Cohiba', n: 'Maduro 5 Genios', w: 'Maduro', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Cocoa', 'Coffee', 'Honey', 'Earth'] },
+  { b: 'Cohiba', n: 'Maduro 5 Mágicos', w: 'Maduro', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Cocoa', 'Coffee', 'Honey', 'Sweet'] },
+  { b: 'Cohiba', n: 'Maduro 5 Secretos', w: 'Maduro', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'] },
+  { b: 'Fonseca', n: 'Delicias', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Cedar', 'Floral', 'Nuts'] },
+  { b: 'H. Upmann', n: 'Coronas Major', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Wood'] },
+  { b: 'Hoyo de Monterrey', n: 'Epicure de Luxe', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Floral', 'Honey', 'Nuts'] },
+  { b: 'José L. Piedra', n: 'Petit Cetros', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Wood', 'Spice', 'Cedar'] },
+  { b: 'Juan López', n: 'Petit Coronas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Cedar', 'Sweet', 'Spice'] },
+  { b: 'Montecristo', n: 'No. 5', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Cedar', 'Coffee', 'Cocoa', 'Wood'] },
+  { b: 'Montecristo', n: 'Línea 1935 Maltés', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Cedar', 'Coffee', 'Cocoa', 'Spice'] },
+  { b: 'Montecristo', n: 'Línea 1935 Dumas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Cedar', 'Coffee', 'Leather', 'Cocoa'] },
+  { b: 'Partagás', n: 'Presidentes', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Spice', 'Cocoa'] },
+  { b: 'Punch', n: 'Royal Selection No. 12', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Cedar', 'Earth', 'Sweet', 'Wood'] },
+  { b: 'Punch', n: 'Petit Coronations', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cedar', 'Sweet', 'Wood', 'Earth'] },
+  { b: 'Quai d\'Orsay', n: 'No. 52', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Floral', 'Cedar', 'Honey'] },
+  { b: 'Quai d\'Orsay', n: 'Senadores', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Floral', 'Nuts', 'Honey'] },
+  { b: 'Quintero', n: 'Brevas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Earth', 'Wood', 'Cedar', 'Sweet'] },
+  { b: 'Rafael González', n: 'Petit Coronas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Floral', 'Cedar', 'Sweet'] },
+  { b: 'Romeo y Julieta', n: 'Romeo No. 1', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cedar', 'Floral', 'Cream', 'Wood'] },
+  { b: 'Romeo y Julieta', n: 'Romeo No. 2', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cedar', 'Floral', 'Cream', 'Sweet'] },
+  { b: 'Trinidad', n: 'Esmeralda', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Floral', 'Honey', 'Cedar', 'Spice'] },
+  { b: 'Vegas Robaina', n: 'Don Alejandro', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Spice', 'Cedar'] },
+  { b: 'Romeo y Julieta', n: 'Petit Coronas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 3, notes: ['Cedar', 'Floral', 'Cream', 'Wood'] },
+  { b: 'H. Upmann', n: 'Petit Coronas', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+  { b: 'Partagás', n: 'Petit Coronas Especiales', w: 'Habano', bi: 'Cuba', f: 'Cuba', o: 'Cuba', s: 4, notes: ['Earth', 'Leather', 'Spice', 'Cocoa'] },
 ];
