@@ -141,6 +141,11 @@
   .ach-desc { font-size: 13px; color: var(--muted); line-height: 1.3; }
   .bar { height: 6px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
   .bar span { display: block; height: 100%; background: var(--accent); }
+  /* Each stat sits in its own slim box with a gap between */
+  .stat-list .ach-row, .stat-list .ach-row:first-of-type {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
   .stat-num { flex: none; font-weight: 700; font-size: 20px; color: var(--accent); white-space: nowrap; align-self: flex-start; }
   .stat-num .chev { color: var(--muted); font-weight: 400; margin-left: 6px; }
   .pips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -1431,7 +1436,7 @@ function renderProfile() {
       ${done.length > 5 ? `<button class="btn small ghost" data-act="all-earned" style="margin-top:8px">${showAllEarned ? 'Show fewer' : `Show all ${done.length}`}</button>` : ''}
     </div>
     <h3>Your stats</h3>
-    <div class="card">${TRACKS.map(trackRow).join('')}</div>
+    <div class="stat-list">${TRACKS.map(trackRow).join('')}</div>
     <h3>Challenges</h3>
     <div class="card">
       ${[...CHALLENGES].sort((x, y) => (earned[x.id] ? 1 : 0) - (earned[y.id] ? 1 : 0)).map(challengeRow).join('')}
