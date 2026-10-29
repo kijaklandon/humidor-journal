@@ -120,6 +120,12 @@
   .tag.warn { border-color: var(--danger); color: var(--danger); }
   .tag.mine { border-color: var(--accent); color: var(--accent); }
   .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
+  .seg button { background: none; border: none; border-radius: 9px; padding: 9px 0; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--accent); color: var(--accent-ink); }
+  .qty-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .qty-row .round { width: 36px; height: 36px; border-radius: 50%; padding: 0; font-size: 20px; line-height: 1; }
+  .qty-row .grow { flex: 1; }
   .detail-box {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 12px 14px; margin-bottom: 14px;
@@ -194,9 +200,20 @@
 <main>
   <!-- JOURNAL -->
   <section id="view-journal" class="view active">
+    <div class="seg" id="journal-seg">
+      <button type="button" data-seg="smoked" class="on">Smoked</button>
+      <button type="button" data-seg="humidor">Humidor</button>
+    </div>
+    <div id="journal-humidor" hidden>
+      <div id="h-stats" class="stats"></div>
+      <button type="button" class="btn block" id="h-add" style="margin-bottom:14px">+ Add cigars to humidor</button>
+      <div id="h-list"></div>
+    </div>
+    <div id="journal-smoked">
     <div id="stats" class="stats"></div>
     <input type="search" id="search" placeholder="Search your cigars, notes, wrappers…" style="margin-bottom:14px">
     <div id="journal-list"></div>
+    </div>
   </section>
 
   <!-- LOG A CIGAR -->
@@ -511,6 +528,7 @@ function resetForm(prefill) {
   formNotes = new Set();
   formScores = {};
   formThirds = [new Set(), new Set(), new Set()];
+  pendingInvId = null;
   THIRDS.forEach((_, i) => $(`#f-third-${i}`) && ($(`#f-third-${i}`).value = ''));
   $('#f-detail').open = false;
   if (prefill) {
@@ -586,7 +604,18 @@ $('#log-form').addEventListener('submit', e => {
   if (id) logs = logs.map(x => x.id === id ? entry : x);
   else logs.push(entry);
   save();
-  toast(id ? 'Updated' : 'Added to your journal');
+  // Logged from the humidor's "Smoked one": take one out of the box
+  const item = !id && pendingInvId && inventory.find(x => x.id === pendingInvId);
+  if (item) {
+    item.qty -= 1;
+    if (item.qty <= 0) inventory = inventory.filter(x => x !== item);
+    saveInventory();
+    toast(item.qty > 0 ? `Logged. ${item.qty} left in your humidor` : 'Logged. That was your last one');
+  } else {
+    toast(id ? 'Updated' : 'Added to your journal');
+  }
+  pendingInvId = null;
+  journalSeg = 'smoked';
   show('journal');
 });
 $('#f-cancel').addEventListener('click', () => show('journal'));
@@ -600,7 +629,23 @@ function topKey(counts) {
   return best;
 }
 
+// The Journal tab holds two lists: cigars you've smoked and cigars you own
+let journalSeg = 'smoked';
+$('#journal-seg').addEventListener('click', e => {
+  const b = e.target.closest('[data-seg]');
+  if (!b) return;
+  journalSeg = b.dataset.seg;
+  renderJournal();
+});
 function renderJournal() {
+  document.querySelectorAll('#journal-seg button').forEach(b => b.classList.toggle('on', b.dataset.seg === journalSeg));
+  $('#journal-smoked').hidden = journalSeg !== 'smoked';
+  $('#journal-humidor').hidden = journalSeg !== 'humidor';
+  if (journalSeg === 'humidor') renderHumidor();
+  else renderSmoked();
+}
+
+function renderSmoked() {
   const avg = logs.length ? (logs.reduce((s, l) => s + l.rating, 0) / logs.length).toFixed(1) : '–';
   const wrapperCounts = {};
   logs.filter(l => l.rating >= 4).forEach(l => wrapperCounts[l.wrapper] = (wrapperCounts[l.wrapper] || 0) + 1);
@@ -735,6 +780,10 @@ function renderRecs() {
 
   const p = buildProfile();
   const ranked = untried.map(c => scoreCigar(c, p)).sort((a, b) => b.score - a.score).slice(0, 8);
+  // Best match among cigars you already own
+  const tonight = inventory
+    .map(i => ({ i, ...scoreCigar({ b: i.brand, n: i.name, w: i.wrapper, o: i.origin, s: i.strength, notes: i.notes || [] }, p) }))
+    .sort((a, b) => b.score - a.score)[0];
   const topNotes = Object.entries(p.notes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k]) => k);
   const favWrapper = topKey(Object.fromEntries(Object.entries(p.wrapper).filter(([, v]) => v > 0)));
 
@@ -748,6 +797,19 @@ function renderRecs() {
       ${topNotes.length ? `<div class="chips">${topNotes.map(n => `<span class="chip">${n}</span>`).join('')}</div>` : ''}
       ${logs.length < 3 ? `<p class="muted" style="margin:10px 0 0;font-size:14px">Based on ${logs.length} cigar${logs.length > 1 ? 's' : ''}. Log a few more for sharper picks.</p>` : ''}
     </div>
+    ${tonight ? `
+      <div class="card" style="border-color:var(--accent)">
+        <div class="mini-label" style="margin-top:0">Tonight, from your humidor</div>
+        <div class="row">
+          <div>
+            <div class="card-title">${esc(tonight.i.name)}</div>
+            <div class="card-sub">${esc([tonight.i.brand, tonight.i.wrapper, tonight.i.size].filter(Boolean).join(' · '))}</div>
+          </div>
+          <span class="badge">×${tonight.i.qty}</span>
+        </div>
+        ${tonight.reasons.length ? `<ul class="reasons">${tonight.reasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+        <button class="btn small" style="margin-top:10px" data-smoke="${tonight.i.id}">Smoke it and log</button>
+      </div>` : ''}
     ${ranked.map((r, i) => recCard(r, i < 3)).join('')}`;
 }
 
@@ -760,13 +822,18 @@ function recCard(r, top) {
           <div class="card-title">${esc(c.n)}</div>
           <div class="card-sub">${esc(c.b)} · ${esc(c.w)} · ${esc(c.o)}</div>
         </div>
-        ${top ? '<span class="badge">Top pick</span>' : ''}
+        <div class="tags">
+          ${invCount(c) ? `<span class="tag mine">In humidor ×${invCount(c)}</span>` : ''}
+          ${top ? '<span class="badge">Top pick</span>' : ''}
+        </div>
       </div>
       ${r.reasons.length ? `<ul class="reasons">${r.reasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <button class="btn small ghost" style="margin-top:10px" data-log="${esc(fullName(c))}">I smoked this, log it</button>
     </div>`;
 }
 $('#recs').addEventListener('click', e => {
+  const s = e.target.closest('[data-smoke]');
+  if (s) return smokeOne(s.dataset.smoke);
   const b = e.target.closest('[data-log]');
   if (!b) return;
   resetForm(findCatalog(b.dataset.log));
@@ -826,6 +893,7 @@ function renderBrowse() {
       c.status === 'discontinued' ? '<span class="tag">Discontinued</span>' : '',
       r?.status === 'ok' || c.verified ? '<span class="tag ok">✓ Right</span>' : '',
       r?.status === 'fix' ? '<span class="tag warn">Needs fix</span>' : '',
+      invCount(c) ? `<span class="tag mine">Humidor ×${invCount(c)}</span>` : '',
     ].join('');
     html += `
       <div class="card tap" data-cig="${esc(fullName(c))}">
@@ -874,7 +942,8 @@ function openCigar(name) {
       <button class="btn small" data-act="save-fix" style="margin-top:8px">Save note</button>
     </div>
     ${r.status ? '<button class="btn small ghost" data-act="clear" style="margin-top:10px;border:none;padding-left:0">Clear my review</button>' : ''}
-    <div class="btn-row" style="margin-top:16px">
+    <button class="btn block ghost" data-act="own" style="margin-top:16px">+ Add to humidor${invCount(c) ? ` (you have ${invCount(c)})` : ''}</button>
+    <div class="btn-row">
       <button class="btn ghost" data-act="close">Close</button>
       <button class="btn" data-act="log">Log this cigar</button>
     </div>`;
@@ -883,6 +952,7 @@ function openCigar(name) {
     if (!act) return;
     if (act === 'close') return closeSheet();
     if (act === 'log') { closeSheet(); resetForm(c); show('add'); return; }
+    if (act === 'own') return openInvForm(null, c);
     if (act === 'ok') { reviews[name] = { status: 'ok', at: Date.now() }; toast('Marked as right'); }
     if (act === 'fix') reviews[name] = { status: 'fix', note: r.note || '', at: Date.now() };
     if (act === 'save-fix') { reviews[name] = { status: 'fix', note: $('#fix-note').value.trim(), at: Date.now() }; toast('Note saved'); }
@@ -931,9 +1001,174 @@ $('#copy-review').addEventListener('click', async () => {
   toast('Copied. Paste it to Claude');
 });
 
+// ---------- Humidor inventory ----------
+const INV_KEY = 'humidor.inventory.v1';
+let inventory = (() => {
+  try { return JSON.parse(localStorage.getItem(INV_KEY)) || []; } catch { return []; }
+})();
+function saveInventory() {
+  try { localStorage.setItem(INV_KEY, JSON.stringify(inventory)); }
+  catch { toast('Could not save on this device'); }
+}
+// Set when "Smoked one" opens the log form, so saving the log takes one out of the box
+let pendingInvId = null;
+
+const invKey = i => `${i.brand} ${i.name}`.trim().toLowerCase();
+function invCount(c) {
+  const full = fullName(c).toLowerCase();
+  return inventory.filter(i => invKey(i) === full || (!i.brand && i.name.toLowerCase() === c.n.toLowerCase()))
+    .reduce((s, i) => s + i.qty, 0);
+}
+const money = n => '$' + n.toFixed(n % 1 ? 2 : 0);
+
+function renderHumidor() {
+  const total = inventory.reduce((s, i) => s + i.qty, 0);
+  const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+  $('#h-stats').innerHTML = `
+    <div class="stat"><b>${total}</b><small>Cigars</small></div>
+    <div class="stat"><b>${inventory.length}</b><small>Kinds</small></div>
+    <div class="stat"><b style="font-size:17px;line-height:26px">${value ? money(value) : '–'}</b><small>Value</small></div>`;
+
+  if (!inventory.length) {
+    $('#h-list').innerHTML = `
+      <div class="empty card">
+        <div class="big">🗄️</div>
+        <h2>Your humidor is empty</h2>
+        <p class="muted">Add the cigars you own. You can also tap any cigar in Browse and choose "Add to humidor".</p>
+      </div>`;
+    return;
+  }
+  const list = [...inventory].sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || a.name.localeCompare(b.name));
+  $('#h-list').innerHTML = list.map(i => `
+    <div class="card" data-inv="${i.id}">
+      <div class="row" data-act="edit" style="cursor:pointer">
+        <div>
+          <div class="card-title">${esc(i.name)}</div>
+          <div class="card-sub">${esc([i.brand, i.wrapper, STRENGTHS[i.strength - 1], i.size].filter(Boolean).join(' · '))}</div>
+          ${i.store || i.date || i.price ? `<div class="card-sub">${esc([i.date ? 'Bought ' + fmtDate(i.date) : '', i.store, i.price ? money(i.price) + ' each' : ''].filter(Boolean).join(' · '))}</div>` : ''}
+        </div>
+        <span class="badge">×${i.qty}</span>
+      </div>
+      <div class="qty-row">
+        <button type="button" class="btn small ghost round" data-act="minus" aria-label="One fewer">−</button>
+        <button type="button" class="btn small ghost round" data-act="plus" aria-label="One more">+</button>
+        <button type="button" class="btn small grow" data-act="smoke">Smoked one</button>
+      </div>
+    </div>`).join('');
+}
+
+$('#h-list').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  const card = e.target.closest('[data-inv]');
+  if (!act || !card) return;
+  const item = inventory.find(x => x.id === card.dataset.inv);
+  if (!item) return;
+  if (act === 'edit') return openInvForm(item);
+  if (act === 'smoke') return smokeOne(item.id);
+  if (act === 'plus') item.qty += 1;
+  if (act === 'minus') {
+    if (item.qty <= 1) {
+      if (!confirm(`Remove ${item.name} from your humidor?`)) return;
+      inventory = inventory.filter(x => x !== item);
+    } else item.qty -= 1;
+  }
+  saveInventory();
+  renderHumidor();
+});
+$('#h-add').addEventListener('click', () => openInvForm());
+
+function smokeOne(id) {
+  const i = inventory.find(x => x.id === id);
+  if (!i) return;
+  closeSheet();
+  resetForm({ n: i.name, b: i.brand, w: i.wrapper, o: i.origin || 'Other', s: i.strength, notes: i.notes || [] });
+  $('#f-size').value = i.size || '';
+  pendingInvId = id;
+  show('add');
+}
+
+// Add / edit sheet. `item` edits an existing entry; `c` prefills from the vault.
+function openInvForm(item, c) {
+  const v = item || (c ? { name: c.n, brand: c.b, wrapper: c.w, origin: c.o, strength: c.s, notes: c.notes } : {});
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin:0 0 12px">${item ? 'Edit humidor cigar' : 'Add to humidor'}</h2>
+    <label class="field"><span>Cigar name</span>
+      <input type="text" id="i-name" list="catalog-list" placeholder="Start typing, e.g. Oliva Serie V" value="${esc(v.name || '')}">
+    </label>
+    <label class="field"><span>Brand</span><input type="text" id="i-brand" value="${esc(v.brand || '')}"></label>
+    <div class="two">
+      <label class="field"><span>Wrapper</span><select id="i-wrapper">${WRAPPERS.map(w => `<option ${w === (v.wrapper || 'Habano') ? 'selected' : ''}>${w}</option>`).join('')}</select></label>
+      <label class="field"><span>Strength</span><select id="i-strength">${STRENGTHS.map((s, k) => `<option value="${k + 1}" ${k + 1 === (v.strength || 3) ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>How many</span><input type="number" id="i-qty" inputmode="numeric" min="1" value="${v.qty || 1}"></label>
+      <label class="field"><span>Size / vitola</span><input type="text" id="i-size" placeholder="e.g. Robusto" value="${esc(v.size || '')}"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Price each ($)</span><input type="number" id="i-price" inputmode="decimal" min="0" step="0.01" placeholder="Optional" value="${v.price || ''}"></label>
+      <label class="field"><span>Date bought</span><input type="date" id="i-date" value="${esc(v.date || (item ? '' : today()))}"></label>
+    </div>
+    <label class="field"><span>Where you bought it</span><input type="text" id="i-store" placeholder="Optional" value="${esc(v.store || '')}"></label>
+    <div class="btn-row">
+      ${item ? '<button class="btn danger" data-act="delete">Remove</button>' : ''}
+      <button class="btn ghost" data-act="close">Cancel</button>
+      <button class="btn" data-act="save">Save</button>
+    </div>`;
+  let origin = v.origin || 'Other', notes = v.notes || [];
+  $('#i-name').addEventListener('change', () => {
+    const m = findCatalog($('#i-name').value);
+    if (!m) return;
+    $('#i-name').value = m.n;
+    $('#i-brand').value = m.b;
+    $('#i-wrapper').value = m.w;
+    $('#i-strength').value = m.s;
+    origin = m.o;
+    notes = m.notes;
+  });
+  $('#sheet-body').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'close') return closeSheet();
+    if (act === 'delete') {
+      if (!confirm(`Remove ${item.name} from your humidor?`)) return;
+      inventory = inventory.filter(x => x.id !== item.id);
+      saveInventory(); closeSheet(); renderJournal(); toast('Removed');
+      return;
+    }
+    if (act !== 'save') return;
+    const name = $('#i-name').value.trim();
+    if (!name) { toast('Give it a name'); return; }
+    const entry = {
+      id: item?.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name,
+      brand: $('#i-brand').value.trim(),
+      wrapper: $('#i-wrapper').value,
+      origin,
+      strength: +$('#i-strength').value,
+      notes,
+      qty: Math.max(1, Math.round(+$('#i-qty').value) || 1),
+      size: $('#i-size').value.trim(),
+      price: +$('#i-price').value || null,
+      date: $('#i-date').value,
+      store: $('#i-store').value.trim(),
+      added: item?.added || Date.now(),
+    };
+    // Adding more of something already in the box just bumps the count
+    const same = !item && inventory.find(x => invKey(x) === invKey(entry) && (x.size || '') === entry.size);
+    if (same) same.qty += entry.qty;
+    else if (item) inventory = inventory.map(x => x.id === item.id ? entry : x);
+    else inventory.push(entry);
+    saveInventory();
+    closeSheet();
+    toast(same ? `Now ${same.qty} in your humidor` : item ? 'Updated' : 'Added to your humidor');
+    if ($('#view-browse').classList.contains('active')) renderBrowse();
+    else { journalSeg = 'humidor'; show('journal'); }
+  };
+  $('#sheet').classList.add('open');
+}
+
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews, inventory }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `humidor-backup-${today()}.json`;
@@ -956,6 +1191,11 @@ $('#import-file').addEventListener('change', async e => {
       reviews = { ...data.reviews, ...reviews };
       saveReviews();
     }
+    if (Array.isArray(data.inventory)) {
+      const have = new Set(inventory.map(i => i.id));
+      inventory = inventory.concat(data.inventory.filter(i => i && i.id && i.name && !have.has(i.id)));
+      saveInventory();
+    }
     toast(`Imported ${added.length} cigar${added.length === 1 ? '' : 's'}`);
   } catch {
     toast("That file doesn't look like a backup");
@@ -963,12 +1203,14 @@ $('#import-file').addEventListener('change', async e => {
   e.target.value = '';
 });
 $('#clear-btn').addEventListener('click', () => {
-  if (!logs.length && !Object.keys(reviews).length) { toast('Nothing to delete'); return; }
-  if (confirm('Delete every cigar in your journal and all your vault reviews? This cannot be undone. Export a backup first if you want to keep them.')) {
+  if (!logs.length && !Object.keys(reviews).length && !inventory.length) { toast('Nothing to delete'); return; }
+  if (confirm('Delete your journal, your humidor and all your vault reviews? This cannot be undone. Export a backup first if you want to keep them.')) {
     logs = [];
     save();
     reviews = {};
     saveReviews();
+    inventory = [];
+    saveInventory();
     toast('All data deleted');
     show('journal');
   }
