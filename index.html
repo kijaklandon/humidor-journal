@@ -120,6 +120,23 @@
   .tag.warn { border-color: var(--danger); color: var(--danger); }
   .tag.mine { border-color: var(--accent); color: var(--accent); }
   .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%; flex: none;
+    background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+    font: 700 24px Georgia, serif;
+  }
+  .stats.six { grid-template-columns: repeat(3, 1fr); }
+  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ach { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 6px; text-align: center; }
+  .ach.locked { border-color: var(--border); }
+  .ach.locked .ach-icon { filter: grayscale(1); opacity: .45; }
+  .ach.locked .ach-title { color: var(--muted); }
+  .ach-icon { font-size: 28px; line-height: 1.2; }
+  .ach-title { font-weight: 650; font-size: 13px; margin-top: 4px; }
+  .ach-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+  .bar { height: 5px; background: var(--surface-2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--accent); }
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
   .seg button { background: none; border: none; border-radius: 9px; padding: 9px 0; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
   .seg button.on { background: var(--accent); color: var(--accent-ink); }
@@ -294,7 +311,8 @@
 
   <!-- MORE -->
   <section id="view-more" class="view">
-    <h2>More</h2>
+    <div id="profile"></div>
+    <h3>Settings & data</h3>
     <div class="card">
       <div class="card-title">Your data</div>
       <p class="muted" style="margin:6px 0 12px">Your journal is saved on this device. Make a backup now and then so you never lose it.</p>
@@ -326,7 +344,7 @@
   <button data-view="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log</button>
   <button data-view="browse"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Browse</button>
   <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
-  <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>More</button>
+  <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>Profile</button>
 </nav>
 
 <div class="backdrop" id="sheet"><div class="sheet" id="sheet-body"></div></div>
@@ -357,6 +375,7 @@ function load() {
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(logs)); }
   catch { toast('Could not save on this device'); }
+  checkAchievements();
 }
 let logs = load();
 
@@ -390,7 +409,7 @@ function show(view) {
   if (view === 'journal') renderJournal();
   if (view === 'recs') renderRecs();
   if (view === 'browse') renderBrowse();
-  if (view === 'more') renderReviewSummary();
+  if (view === 'more') { renderProfile(); renderReviewSummary(); }
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
@@ -857,6 +876,7 @@ let reviews = (() => {
 function saveReviews() {
   try { localStorage.setItem(REVIEW_KEY, JSON.stringify(reviews)); }
   catch { toast('Could not save on this device'); }
+  checkAchievements();
 }
 
 $('#b-wrapper').innerHTML = '<option value="">Wrapper</option>' + WRAPPERS.map(w => `<option>${w}</option>`).join('');
@@ -1009,6 +1029,7 @@ let inventory = (() => {
 function saveInventory() {
   try { localStorage.setItem(INV_KEY, JSON.stringify(inventory)); }
   catch { toast('Could not save on this device'); }
+  checkAchievements();
 }
 // Set when "Smoked one" opens the log form, so saving the log takes one out of the box
 let pendingInvId = null;
@@ -1166,9 +1187,186 @@ function openInvForm(item, c) {
   $('#sheet').classList.add('open');
 }
 
+// ---------- Profile ----------
+const PROFILE_KEY = 'humidor.profile.v1';
+let profile = (() => {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; } catch { return {}; }
+})();
+function saveProfile() {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+  catch { toast('Could not save on this device'); }
+}
+
+// ---------- Achievements ----------
+// Progress is worked out from your data each time; `earned` remembers when each
+// one first unlocked, so humidor achievements stay earned after you smoke down.
+const ACH_KEY = 'humidor.achievements.v1';
+let earned = (() => {
+  try { return JSON.parse(localStorage.getItem(ACH_KEY)) || {}; } catch { return {}; }
+})();
+
+const DARK = ['Maduro', 'Broadleaf', 'San Andrés'];
+const distinctCount = arr => new Set(arr.filter(Boolean)).size;
+const brandCount = () => distinctCount(logs.map(l => (l.brand || '').trim().toLowerCase()));
+const countryCount = () => distinctCount(logs.map(l => l.origin).filter(o => o !== 'Other'));
+const wrapperCount = () => distinctCount(logs.map(l => l.wrapper).filter(w => w !== 'Other'));
+const invTotal = () => inventory.reduce((s, i) => s + i.qty, 0);
+const has = test => logs.some(test) ? 1 : 0;
+function maxPerBrand() {
+  const counts = {};
+  logs.forEach(l => { const b = (l.brand || '').trim().toLowerCase(); if (b) counts[b] = (counts[b] || 0) + 1; });
+  return Math.max(0, ...Object.values(counts));
+}
+const vaultEntry = l => CATALOG.find(c => fullName(c).toLowerCase() === `${l.brand} ${l.name}`.trim().toLowerCase());
+
+const ACHIEVEMENTS = [
+  { id: 'first', icon: '🔥', title: 'First Light', desc: 'Log your first cigar', p: () => [logs.length, 1] },
+  { id: 'ten', icon: '🪵', title: 'Regular', desc: 'Log 10 cigars', p: () => [logs.length, 10] },
+  { id: 'twentyfive', icon: '🥃', title: 'Aficionado', desc: 'Log 25 cigars', p: () => [logs.length, 25] },
+  { id: 'fifty', icon: '🎩', title: 'Connoisseur', desc: 'Log 50 cigars', p: () => [logs.length, 50] },
+  { id: 'hundred', icon: '💯', title: 'Century Club', desc: 'Log 100 cigars', p: () => [logs.length, 100] },
+  { id: 'brands5', icon: '🧭', title: 'Brand Explorer', desc: 'Smoke 5 different brands', p: () => [brandCount(), 5] },
+  { id: 'brands15', icon: '🗺️', title: 'Brand Collector', desc: 'Smoke 15 different brands', p: () => [brandCount(), 15] },
+  { id: 'brands30', icon: '👑', title: 'Brand Master', desc: 'Smoke 30 different brands', p: () => [brandCount(), 30] },
+  { id: 'loyal', icon: '🤝', title: 'Loyalist', desc: 'Smoke 5 cigars from one brand', p: () => [maxPerBrand(), 5] },
+  { id: 'countries3', icon: '🛂', title: 'Passport', desc: 'Cigars from 3 countries', p: () => [countryCount(), 3] },
+  { id: 'countries5', icon: '✈️', title: 'Globetrotter', desc: 'Cigars from 5 countries', p: () => [countryCount(), 5] },
+  { id: 'cuban', icon: '🌴', title: 'Habanos Hunter', desc: 'Smoke a Cuban cigar', p: () => [has(l => l.origin === 'Cuba'), 1] },
+  { id: 'wrappers5', icon: '🍂', title: 'Wrapper Spectrum', desc: 'Try 5 wrapper types', p: () => [wrapperCount(), 5] },
+  { id: 'wrappers8', icon: '🌈', title: 'Full Spectrum', desc: 'Try 8 wrapper types', p: () => [wrapperCount(), 8] },
+  { id: 'lightdark', icon: '☯️', title: 'Light & Dark', desc: 'Smoke a Connecticut and a dark wrapper', p: () => [has(l => l.wrapper === 'Connecticut') + has(l => DARK.includes(l.wrapper)), 2] },
+  { id: 'full', icon: '💪', title: 'Full Throttle', desc: 'Smoke a full-strength cigar', p: () => [has(l => l.strength === 5), 1] },
+  { id: 'ladder', icon: '🪜', title: 'Strength Ladder', desc: 'Smoke every strength, Mild to Full', p: () => [distinctCount(logs.map(l => l.strength)), 5] },
+  { id: 'limited', icon: '🦄', title: 'Unicorn Hunter', desc: 'Smoke a limited release', p: () => [has(l => vaultEntry(l)?.status === 'limited'), 1] },
+  { id: 'fivestar', icon: '⭐', title: 'Five Stars', desc: 'Give a cigar 5 stars', p: () => [has(l => l.rating === 5), 1] },
+  { id: 'critic', icon: '🧐', title: 'Tough Critic', desc: 'Rate a cigar 2 stars or less', p: () => [has(l => l.rating <= 2), 1] },
+  { id: 'notes', icon: '📝', title: 'Note Taker', desc: 'Log 5 cigars with detailed notes', p: () => [logs.filter(l => l.detail).length, 5] },
+  { id: 'thirds', icon: '⏳', title: 'Thirds Master', desc: 'Note all three thirds on 5 cigars', p: () => [logs.filter(l => l.detail?.thirds?.every(t => t.notes.length || t.text)).length, 5] },
+  { id: 'perfect', icon: '🎯', title: 'Perfect Smoke', desc: 'Score a 5 for both draw and burn', p: () => [has(l => l.detail?.draw === 5 && l.detail?.burn === 5), 1] },
+  { id: 'pairing', icon: '🍷', title: 'Pairing Pro', desc: 'Log 10 cigars with a pairing', p: () => [logs.filter(l => l.pairing).length, 10] },
+  { id: 'stocked', icon: '🗄️', title: 'Stocked Up', desc: 'Have 10 cigars in your humidor', p: () => [invTotal(), 10] },
+  { id: 'collector', icon: '📦', title: 'Collector', desc: 'Have 25 cigars in your humidor', p: () => [invTotal(), 25] },
+  { id: 'reviewer', icon: '🔍', title: 'Critic\'s Eye', desc: 'Review 10 cigars in the vault', p: () => [Object.keys(reviews).length, 10] },
+];
+const isDone = a => { const [have, need] = a.p(); return have >= need; };
+
+function checkAchievements(silent) {
+  const fresh = ACHIEVEMENTS.filter(a => !earned[a.id] && isDone(a));
+  if (!fresh.length) return;
+  fresh.forEach(a => earned[a.id] = Date.now());
+  try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
+  // Wait for the "saved" toast to finish before celebrating
+  if (!silent) setTimeout(() => toast(fresh.length === 1
+    ? `🏆 Unlocked: ${fresh[0].icon} ${fresh[0].title}`
+    : `🏆 ${fresh.length} achievements unlocked!`), 1500);
+}
+
+function renderProfile() {
+  const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '🍂';
+  const sub = [profile.location, profile.since ? `Smoking since ${profile.since}` : ''].filter(Boolean).join(' · ');
+  const favs = [
+    profile.favCigar && `Favorite: ${profile.favCigar}`,
+    profile.pairing && `Pairs with: ${profile.pairing}`,
+    profile.strength && `Likes: ${STRENGTHS[profile.strength - 1]}`,
+    profile.wrapper && `Wrapper: ${profile.wrapper}`,
+  ].filter(Boolean);
+  const avg = logs.length ? (logs.reduce((s, l) => s + l.rating, 0) / logs.length).toFixed(1) : '–';
+  const done = ACHIEVEMENTS.filter(a => earned[a.id] || isDone(a));
+  const locked = ACHIEVEMENTS.filter(a => !done.includes(a))
+    .map(a => { const [h, n] = a.p(); return { a, h: Math.min(h, n), n }; })
+    .sort((x, y) => y.h / y.n - x.h / x.n);
+
+  $('#profile').innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:flex-start;gap:14px">
+        <div class="avatar">${esc(initials)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
+          <div class="card-sub">${esc(sub) || 'Tap Edit profile to add your details'}</div>
+        </div>
+      </div>
+      ${profile.bio ? `<p style="margin:12px 0 0">${esc(profile.bio)}</p>` : ''}
+      ${favs.length ? `<div class="chips">${favs.map(f => `<span class="chip">${esc(f)}</span>`).join('')}</div>` : ''}
+      <button class="btn small ghost" data-act="edit-profile" style="margin-top:12px">Edit profile</button>
+    </div>
+    <div class="stats six">
+      <div class="stat"><b>${logs.length}</b><small>Smoked</small></div>
+      <div class="stat"><b>${brandCount()}</b><small>Brands</small></div>
+      <div class="stat"><b>${countryCount()}</b><small>Countries</small></div>
+      <div class="stat"><b>${avg}</b><small>Avg rating</small></div>
+      <div class="stat"><b>${invTotal()}</b><small>In humidor</small></div>
+      <div class="stat"><b>${done.length}</b><small>Achievements</small></div>
+    </div>
+    <h3>Achievements · ${done.length} of ${ACHIEVEMENTS.length}</h3>
+    <div class="ach-grid">
+      ${done.map(a => `
+        <div class="ach">
+          <div class="ach-icon">${a.icon}</div>
+          <div class="ach-title">${a.title}</div>
+          <div class="ach-desc">${a.desc}</div>
+          ${earned[a.id] ? `<div class="ach-desc" style="color:var(--accent)">${new Date(earned[a.id]).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
+        </div>`).join('')}
+      ${locked.map(({ a, h, n }) => `
+        <div class="ach locked">
+          <div class="ach-icon">${a.icon}</div>
+          <div class="ach-title">${a.title}</div>
+          <div class="ach-desc">${a.desc}</div>
+          <div class="bar"><span style="width:${Math.round(h / n * 100)}%"></span></div>
+          <div class="ach-desc">${h} / ${n}</div>
+        </div>`).join('')}
+    </div>`;
+}
+$('#profile').addEventListener('click', e => {
+  if (e.target.closest('[data-act="edit-profile"]')) openProfileForm();
+});
+
+function openProfileForm() {
+  const p = profile;
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin:0 0 12px">Edit profile</h2>
+    <label class="field"><span>Name</span><input type="text" id="p-name" maxlength="40" value="${esc(p.name || '')}"></label>
+    <div class="two">
+      <label class="field"><span>Location</span><input type="text" id="p-location" maxlength="40" placeholder="e.g. Tampa, FL" value="${esc(p.location || '')}"></label>
+      <label class="field"><span>Smoking since</span><input type="number" id="p-since" inputmode="numeric" min="1940" max="${new Date().getFullYear()}" placeholder="Year" value="${p.since || ''}"></label>
+    </div>
+    <label class="field"><span>Favorite cigar</span><input type="text" id="p-fav" list="catalog-list" placeholder="Start typing…" value="${esc(p.favCigar || '')}"></label>
+    <label class="field"><span>Favorite pairing</span><input type="text" id="p-pairing" maxlength="40" placeholder="e.g. Bourbon, espresso" value="${esc(p.pairing || '')}"></label>
+    <div class="two">
+      <label class="field"><span>Preferred strength</span><select id="p-strength"><option value="">No preference</option>${STRENGTHS.map((s, i) => `<option value="${i + 1}" ${p.strength === i + 1 ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+      <label class="field"><span>Favorite wrapper</span><select id="p-wrapper"><option value="">No preference</option>${WRAPPERS.filter(w => w !== 'Other').map(w => `<option ${p.wrapper === w ? 'selected' : ''}>${w}</option>`).join('')}</select></label>
+    </div>
+    <label class="field"><span>About you</span><textarea id="p-bio" maxlength="200" placeholder="A line or two about how you enjoy cigars">${esc(p.bio || '')}</textarea></label>
+    <p class="muted" style="font-size:13px;margin:0 0 12px">Your profile is saved on this device only.</p>
+    <div class="btn-row">
+      <button class="btn ghost" data-act="close">Cancel</button>
+      <button class="btn" data-act="save">Save</button>
+    </div>`;
+  $('#sheet-body').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'close') return closeSheet();
+    if (act !== 'save') return;
+    const year = Math.round(+$('#p-since').value);
+    profile = {
+      name: $('#p-name').value.trim(),
+      location: $('#p-location').value.trim(),
+      since: year >= 1940 && year <= new Date().getFullYear() ? year : null,
+      favCigar: $('#p-fav').value.trim(),
+      pairing: $('#p-pairing').value.trim(),
+      strength: +$('#p-strength').value || null,
+      wrapper: $('#p-wrapper').value,
+      bio: $('#p-bio').value.trim(),
+    };
+    saveProfile();
+    closeSheet();
+    renderProfile();
+    toast('Profile saved');
+  };
+  $('#sheet').classList.add('open');
+}
+
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews, inventory }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews, inventory, profile, achievements: earned }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `humidor-backup-${today()}.json`;
@@ -1196,6 +1394,15 @@ $('#import-file').addEventListener('change', async e => {
       inventory = inventory.concat(data.inventory.filter(i => i && i.id && i.name && !have.has(i.id)));
       saveInventory();
     }
+    // Only fill in a profile if this device doesn't have one yet
+    if (data.profile && typeof data.profile === 'object' && !Object.keys(profile).length) {
+      profile = data.profile;
+      saveProfile();
+    }
+    if (data.achievements && typeof data.achievements === 'object') {
+      earned = { ...data.achievements, ...earned };
+      try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
+    }
     toast(`Imported ${added.length} cigar${added.length === 1 ? '' : 's'}`);
   } catch {
     toast("That file doesn't look like a backup");
@@ -1203,14 +1410,18 @@ $('#import-file').addEventListener('change', async e => {
   e.target.value = '';
 });
 $('#clear-btn').addEventListener('click', () => {
-  if (!logs.length && !Object.keys(reviews).length && !inventory.length) { toast('Nothing to delete'); return; }
-  if (confirm('Delete your journal, your humidor and all your vault reviews? This cannot be undone. Export a backup first if you want to keep them.')) {
+  if (!logs.length && !Object.keys(reviews).length && !inventory.length && !Object.keys(profile).length) { toast('Nothing to delete'); return; }
+  if (confirm('Delete your journal, humidor, profile, achievements and vault reviews? This cannot be undone. Export a backup first if you want to keep them.')) {
     logs = [];
     save();
     reviews = {};
     saveReviews();
     inventory = [];
     saveInventory();
+    profile = {};
+    saveProfile();
+    earned = {};
+    try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
     toast('All data deleted');
     show('journal');
   }
@@ -1219,6 +1430,8 @@ $('#clear-btn').addEventListener('click', () => {
 // ---------- Start ----------
 resetForm();
 renderJournal();
+// Quietly credit anything already earned before achievements existed
+checkAchievements(true);
 </script>
 </body>
 </html>
