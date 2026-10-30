@@ -188,17 +188,19 @@ function refreshCurrentView() {
   if (active === 'recs') renderRecs();
   if (active === 'browse') renderBrowse();
   if (active === 'more') { renderProfile(); renderReviewSummary(); }
+  if (active === 'friends' && typeof renderFriends === 'function') renderFriends();
 }
 
 // ---------- Sign in / sign up ----------
 
 async function setAccount(session) {
   const user = session?.user;
-  if (!user) { account = null; renderAccount(); return; }
-  const changed = account?.id !== user.id;
+  const changed = account?.id !== user?.id;
+  if (changed && typeof friendsCache !== 'undefined') friendsCache = null;
+  if (!user) { account = null; renderAccount(); refreshCurrentView(); return; }
   account = { id: user.id, email: user.email, friendCode: account?.friendCode };
   renderAccount();
-  if (changed) syncNow();
+  if (changed) { refreshCurrentView(); syncNow(); }
 }
 
 function openAuthForm(mode = 'signin') {

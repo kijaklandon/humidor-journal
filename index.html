@@ -213,13 +213,13 @@
   /* Bottom tabs */
   nav.tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-template-columns: repeat(6, 1fr);
     background: rgba(28,21,16,.96); backdrop-filter: blur(10px);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
   }
   nav.tabs button {
-    background: none; border: none; color: var(--muted); font: inherit; font-size: 12px;
+    background: none; border: none; color: var(--muted); font: inherit; font-size: 11px;
     padding: 9px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
   }
   nav.tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -339,6 +339,12 @@
     <div id="browse-list"></div>
   </section>
 
+  <!-- FRIENDS -->
+  <section id="view-friends" class="view">
+    <h2>Friends</h2>
+    <div id="friends"></div>
+  </section>
+
   <!-- RECOMMENDATIONS -->
   <section id="view-recs" class="view">
     <h2>For you</h2>
@@ -381,6 +387,7 @@
   <button data-view="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log</button>
   <button data-view="browse"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Browse</button>
   <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
+  <button data-view="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.9-3 3.2-4.5 6-4.5s5.1 1.5 6 4.5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15.5 14.6c2.6-.3 4.6 1 5.5 3.9"/></svg>Friends</button>
   <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>Profile</button>
 </nav>
 
@@ -450,6 +457,7 @@ function show(view) {
   if (view === 'recs') renderRecs();
   if (view === 'browse') renderBrowse();
   if (view === 'more') { renderProfile(); renderReviewSummary(); }
+  if (view === 'friends' && typeof renderFriends === 'function') renderFriends();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
@@ -1656,5 +1664,6 @@ checkAchievements(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
 <script src="sync.js"></script>
+<script src="friends.js"></script>
 </body>
 </html>
