@@ -316,6 +316,7 @@
         <div id="f-thirds"></div>
       </details>
       <label class="toggle field"><input type="checkbox" id="f-again"> <span style="margin:0;color:var(--text)">I'd smoke this again</span></label>
+      <label class="toggle field"><input type="checkbox" id="f-private"> <span style="margin:0;color:var(--text)">Keep private <span class="muted" style="font-size:13px">· friends won't see this one</span></span></label>
       <div class="btn-row">
         <button type="button" class="btn ghost" id="f-cancel">Cancel</button>
         <button type="submit" class="btn">Save</button>
@@ -628,6 +629,7 @@ function editLog(id) {
   $('#f-enjoyed').value = l.enjoyed || '';
   $('#f-pairing').value = l.pairing || '';
   $('#f-again').checked = !!l.again;
+  $('#f-private').checked = !!l.private;
   formRating = l.rating;
   formNotes = new Set(l.notes || []);
   const d = l.detail || {};
@@ -665,6 +667,7 @@ $('#log-form').addEventListener('submit', e => {
     enjoyed: $('#f-enjoyed').value.trim(),
     pairing: $('#f-pairing').value.trim(),
     again: $('#f-again').checked,
+    private: $('#f-private').checked || undefined,
     detail,
     created: id ? (logs.find(x => x.id === id)?.created || Date.now()) : Date.now(),
   };
@@ -745,7 +748,7 @@ function renderSmoked() {
         ${starsHtml(l.rating)}
       </div>
       <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
-      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}${l.detail ? ' · Detailed notes' : ''}</div>
+      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}${l.detail ? ' · Detailed notes' : ''}${l.private ? ' · Private' : ''}</div>
       ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
     </div>`).join('') : '<p class="muted">No cigars match that search.</p>';
 }
