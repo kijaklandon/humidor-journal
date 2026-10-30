@@ -308,7 +308,33 @@ function renderAccount() {
         <button class="btn small ghost" data-act="signout">Sign out</button>
         <button class="btn small" data-act="sync" ${syncing ? 'disabled' : ''}>Sync now</button>
       </div>
+      <button class="btn small ghost block" data-act="delete-account" style="margin-top:10px;border:none;color:var(--danger)">Delete my account</button>
     </div>`;
+}
+
+// Permanently removes the account and everything stored in it (journal,
+// humidor, profile, badges, follows). The copy on this phone is the user's choice.
+async function deleteAccount() {
+  if (!confirm('Delete your account? This permanently removes your account and everything backed up in it: journal, humidor, profile, badges and friends. It cannot be undone.')) return;
+  const typed = prompt('To confirm, type DELETE');
+  if ((typed || '').trim().toUpperCase() !== 'DELETE') return toast('Account not deleted');
+  const { error } = await sb.rpc('delete_my_account');
+  if (error) return toast("Couldn't delete your account. Check your connection");
+  const wipe = confirm('Your account is deleted. Also erase your journal from this phone? Choose Cancel to keep it here, offline.');
+  try { await sb.auth.signOut({ scope: 'local' }); } catch {}
+  try { localStorage.removeItem(BASE_KEY); } catch {}
+  account = null;
+  if (wipe) {
+    applyingRemote = true;
+    logs = []; inventory = []; profile = {}; reviews = {}; earned = {}; humidorPeak = 0;
+    for (const k of [KEY, INV_KEY, PROFILE_KEY, REVIEW_KEY, ACH_KEY, PEAK_KEY]) {
+      try { localStorage.removeItem(k); } catch {}
+    }
+    applyingRemote = false;
+  }
+  renderAccount();
+  refreshCurrentView();
+  toast(wipe ? 'Account and data deleted' : 'Account deleted. Your journal stays on this phone');
 }
 
 if ($('#account')) {
@@ -318,6 +344,7 @@ if ($('#account')) {
     if (act === 'signup') openAuthForm('signup');
     if (act === 'signout') signOut();
     if (act === 'sync') syncNow();
+    if (act === 'delete-account') deleteAccount();
   });
 }
 

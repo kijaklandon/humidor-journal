@@ -38,10 +38,23 @@ async function loadFriends() {
     people = Object.fromEntries(data.map(p => [p.id, p]));
   }
   const person = id => people[id] || { id, name: null, friend_code: '' };
+  // Blocked people's profiles are hidden from us, so their names are remembered on this device
+  const { data: blocks, error: e3 } = await sb.from('blocks').select('blocked').eq('blocker', uid);
+  if (e3) throw e3;
+  const names = blockedNames();
   return {
     following: rows.filter(r => r.follower === uid).map(r => person(r.following)),
     followers: rows.filter(r => r.following === uid).map(r => person(r.follower)),
+    blocked: blocks.map(b => ({ id: b.blocked, name: names[b.blocked] || 'Blocked user' })),
   };
+}
+
+const BLOCKED_KEY = 'humidor.blockedNames.v1';
+function blockedNames() {
+  try { return JSON.parse(localStorage.getItem(BLOCKED_KEY)) || {}; } catch { return {}; }
+}
+function rememberBlocked(id, name) {
+  try { localStorage.setItem(BLOCKED_KEY, JSON.stringify({ ...blockedNames(), [id]: name })); } catch {}
 }
 
 // Latest shared smokes from everyone you follow (the database hides private ones)
@@ -175,7 +188,15 @@ function peopleHtml() {
     <h3>Following${f ? ' · ' + f.following.length : ''}</h3>
     <div class="card">${list(f?.following, 'unfollow', 'Unfollow', "You're not following anyone yet. Add a friend's code above.")}</div>
     <h3>Followers${f ? ' · ' + f.followers.length : ''}</h3>
-    <div class="card">${list(f?.followers, 'remove', 'Remove', 'No followers yet. Share your code so friends can follow you.')}</div>`;
+    <div class="card">${list(f?.followers, 'remove', 'Remove', 'No followers yet. Share your code so friends can follow you.')}</div>
+    ${f?.blocked.length ? `
+      <h3>Blocked · ${f.blocked.length}</h3>
+      <div class="card">${f.blocked.map(p => `
+        <div class="ach-row">
+          <div class="grow"><div class="ach-title">${esc(p.name)}</div></div>
+          <button class="btn small ghost" data-act="unblock" data-id="${p.id}" data-name="${esc(p.name)}">Unblock</button>
+        </div>`).join('')}
+      </div>` : ''}`;
 }
 
 // ---------- A friend's log ----------
@@ -312,7 +333,8 @@ async function openFriendProfile(id) {
         <span class="badge">×${item.qty}</span>
       </div>`).join('') : '<p class="muted">Their humidor is empty.</p>'}
     <div class="btn-row" style="margin-top:18px">
-      ${following ? `<button class="btn danger" data-act="unfollow">Unfollow</button>` : ''}
+      ${following ? `<button class="btn ghost" data-act="unfollow">Unfollow</button>` : ''}
+      <button class="btn danger" data-act="block">Block</button>
       <button class="btn ghost" data-act="close">Close</button>
     </div>`;
   $('#sheet-body').onclick = async e => {
@@ -326,6 +348,15 @@ async function openFriendProfile(id) {
       if (error) return toast("Couldn't update. Check your connection");
       closeSheet();
       toast(`Unfollowed ${personName(p)}`);
+      renderFriends();
+    }
+    if (act === 'block') {
+      if (!confirm(`Block ${personName(p)}? You'll stop following each other, and they won't be able to follow you or see anything you share.`)) return;
+      const { error } = await sb.rpc('block_user', { target: id });
+      if (error) return toast("Couldn't block. Check your connection");
+      rememberBlocked(id, personName(p));
+      closeSheet();
+      toast(`Blocked ${personName(p)}`);
       renderFriends();
     }
   };
@@ -389,6 +420,13 @@ $('#friends').addEventListener('click', async e => {
   if (act === 'share') return shareCode();
   if (act === 'copy') return copyText(account.friendCode);
   if (act === 'refresh') return renderFriends();
+  if (act === 'unblock') {
+    if (!confirm(`Unblock ${b.dataset.name}? They'll be able to follow you again with your code.`)) return;
+    const { error } = await sb.from('blocks').delete().eq('blocker', account.id).eq('blocked', b.dataset.id);
+    if (error) return toast("Couldn't update. Check your connection");
+    toast(`Unblocked ${b.dataset.name}`);
+    return renderFriends();
+  }
   if (act === 'unfollow' || act === 'remove') {
     const name = b.dataset.name;
     const msg = act === 'unfollow'
