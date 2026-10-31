@@ -5,3 +5,6 @@ mywrap-backup-*.json
 # Windows clutter
 Thumbs.db
 desktop.ini
+
+# Icon drafts (not part of the app)
+icon-concepts/

@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MyWrap">
 <meta name="theme-color" content="#17110d">
+<script>
+  // Apply the saved color theme before anything draws, so it never flashes the default
+  try { const t = localStorage.getItem('mywrap.theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -22,7 +26,25 @@
     --accent: #d99a4e;
     --accent-ink: #1f140b;
     --danger: #d0604a;
+    --off: #5a4636;        /* empty stars and dots */
     --radius: 14px;
+  }
+  /* ---------- Color themes (Profile > Appearance) ---------- */
+  [data-theme="maduro"] {
+    --bg: #0e0b0a; --surface: #1a1412; --surface-2: #241b18; --border: #33251f;
+    --text: #f1e6dc; --muted: #a8978a; --accent: #c0603f; --accent-ink: #fff3ea; --off: #4a3830;
+  }
+  [data-theme="connecticut"] {
+    --bg: #f4ecdd; --surface: #fffaf1; --surface-2: #efe3cd; --border: #dfcfb4;
+    --text: #2b2118; --muted: #7a6a58; --accent: #a8692c; --accent-ink: #fffaf1; --danger: #b5442f; --off: #d6c4a8;
+  }
+  [data-theme="cedar"] {
+    --bg: #1c1210; --surface: #2a1a16; --surface-2: #36221c; --border: #472c24;
+    --text: #f6e7dd; --muted: #c4a596; --accent: #e07a4f; --accent-ink: #1c1210; --off: #5e3a2e;
+  }
+  [data-theme="lounge"] {
+    --bg: #0f1612; --surface: #18221c; --surface-2: #212e26; --border: #2c3b31;
+    --text: #ecefe6; --muted: #a3b0a2; --accent: #c9a45c; --accent-ink: #10170f; --off: #3c4a40;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -35,7 +57,7 @@
   header.top {
     position: sticky; top: 0; z-index: 5;
     padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
-    background: rgba(23,17,13,.92); backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
   }
   header.top h1 { margin: 0; font-size: 20px; letter-spacing: .3px; font-family: Georgia, "Times New Roman", serif; }
@@ -72,7 +94,7 @@
   button.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 
   .stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
-  .stars .off { color: #5a4636; }
+  .stars .off { color: var(--off); }
 
   /* Forms */
   label.field { display: block; margin-bottom: 14px; }
@@ -93,7 +115,7 @@
   .rating-input { display: flex; gap: 4px; }
   .rating-input button {
     background: none; border: none; font-size: 34px; line-height: 1; padding: 2px;
-    color: #5a4636; cursor: pointer;
+    color: var(--off); cursor: pointer;
   }
   .rating-input button.on { color: var(--accent); }
 
@@ -203,7 +225,16 @@
   .third .chip { font-size: 13px; padding: 5px 10px; }
   .score-view { display: grid; grid-template-columns: 110px auto 1fr; gap: 4px 10px; align-items: center; font-size: 15px; margin: 8px 0; }
   .score-view .pips { color: var(--accent); letter-spacing: 2px; white-space: nowrap; }
-  .score-view .pips .off { color: #5a4636; }
+  .score-view .pips .off { color: var(--off); }
+  .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+  .theme-opt { background: none; border: none; padding: 0; font: inherit; color: var(--muted); font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .theme-opt .swatch {
+    width: 48px; height: 48px; border-radius: 50%; position: relative;
+    border: 2px solid var(--border); overflow: hidden;
+  }
+  .theme-opt .swatch::after { content: ''; position: absolute; right: 0; bottom: 0; width: 50%; height: 50%; background: var(--sw-accent); }
+  .theme-opt.on { color: var(--text); font-weight: 700; }
+  .theme-opt.on .swatch { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
   .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .filters select { font-size: 14px; padding: 9px 26px 9px 10px; background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; }
   #browse-list h3 { margin-top: 20px; }
@@ -214,7 +245,7 @@
   nav.tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
     display: grid; grid-template-columns: repeat(6, 1fr);
-    background: rgba(28,21,16,.96); backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(10px);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -357,6 +388,10 @@
     <div id="account"></div>
     <div id="profile"></div>
     <h3>Settings & data</h3>
+    <div class="card">
+      <div class="card-title">Appearance</div>
+      <div class="theme-grid" id="theme-picker"></div>
+    </div>
     <div class="card">
       <div class="card-title">Your data</div>
       <p class="muted" style="margin:6px 0 12px">Your journal is saved on this device. Make a backup now and then so you never lose it.</p>
@@ -1588,6 +1623,40 @@ function openProfileForm() {
   };
   $('#sheet').classList.add('open');
 }
+
+// ---------- Color themes ----------
+// Colors live in the CSS ([data-theme] blocks); these are just for the picker swatches
+const THEMES = [
+  { id: 'tobacco', name: 'Tobacco', bg: '#17110d', accent: '#d99a4e' },
+  { id: 'maduro', name: 'Maduro', bg: '#0e0b0a', accent: '#c0603f' },
+  { id: 'connecticut', name: 'Connecticut', bg: '#f4ecdd', accent: '#a8692c' },
+  { id: 'cedar', name: 'Cedar', bg: '#1c1210', accent: '#e07a4f' },
+  { id: 'lounge', name: 'Lounge', bg: '#0f1612', accent: '#c9a45c' },
+];
+const THEME_KEY = 'mywrap.theme';
+const currentTheme = () => document.documentElement.dataset.theme || 'tobacco';
+
+function applyTheme(id) {
+  const t = THEMES.find(x => x.id === id) || THEMES[0];
+  if (t.id === 'tobacco') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t.id;
+  document.querySelector('meta[name="theme-color"]').content = t.bg;
+  try { localStorage.setItem(THEME_KEY, t.id); } catch {}
+  renderThemePicker();
+}
+function renderThemePicker() {
+  $('#theme-picker').innerHTML = THEMES.map(t => `
+    <button type="button" class="theme-opt ${currentTheme() === t.id ? 'on' : ''}" data-theme-id="${t.id}">
+      <span class="swatch" style="background:${t.bg};--sw-accent:${t.accent}"></span>
+      ${t.name}
+    </button>`).join('');
+}
+$('#theme-picker').addEventListener('click', e => {
+  const b = e.target.closest('[data-theme-id]');
+  if (b) applyTheme(b.dataset.themeId);
+});
+renderThemePicker();
+document.querySelector('meta[name="theme-color"]').content = (THEMES.find(t => t.id === currentTheme()) || THEMES[0]).bg;
 
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {
