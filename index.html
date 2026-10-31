@@ -34,17 +34,13 @@
     --bg: #f4ecdd; --surface: #fffaf1; --surface-2: #efe3cd; --border: #dfcfb4;
     --text: #2b2118; --muted: #7a6a58; --accent: #a8692c; --accent-ink: #fffaf1; --danger: #b5442f; --off: #d6c4a8;
   }
-  [data-theme="lounge"] {
-    --bg: #0f1612; --surface: #18221c; --surface-2: #212e26; --border: #2c3b31;
-    --text: #ecefe6; --muted: #a3b0a2; --accent: #c9a45c; --accent-ink: #10170f; --off: #3c4a40;
+  [data-theme="navy"] {
+    --bg: #0f1b33; --surface: #172642; --surface-2: #1f3050; --border: #2c3f63;
+    --text: #eef1f7; --muted: #a3b0c8; --accent: #d9b25c; --accent-ink: #0f1b33; --off: #3b4e74;
   }
-  [data-theme="habano"] {
-    --bg: #170c0e; --surface: #241316; --surface-2: #2f1a1e; --border: #3f2328;
-    --text: #f5e8e4; --muted: #c0a2a0; --accent: #d8b25a; --accent-ink: #1f1408; --off: #55313a;
-  }
-  [data-theme="ash"] {
-    --bg: #141516; --surface: #1e2022; --surface-2: #282a2d; --border: #34373a;
-    --text: #eceeef; --muted: #a2a7ab; --accent: #ef7d45; --accent-ink: #1a0f08; --off: #44484c;
+  [data-theme="blackred"] {
+    --bg: #0a0a0a; --surface: #151313; --surface-2: #1e1b1b; --border: #2c2626;
+    --text: #f3eeee; --muted: #a89d9d; --accent: #d33a3a; --accent-ink: #fff5f5; --danger: #e8704f; --off: #3a3030;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -1628,10 +1624,9 @@ function openProfileForm() {
 // Colors live in the CSS ([data-theme] blocks); these are just for the picker swatches
 const THEMES = [
   { id: 'tobacco', name: 'Tobacco', bg: '#17110d', accent: '#d99a4e' },
-  { id: 'habano', name: 'Habano', bg: '#170c0e', accent: '#d8b25a' },
-  { id: 'lounge', name: 'Lounge', bg: '#0f1612', accent: '#c9a45c' },
-  { id: 'ash', name: 'Ash', bg: '#141516', accent: '#ef7d45' },
   { id: 'connecticut', name: 'Connecticut', bg: '#f4ecdd', accent: '#a8692c' },
+  { id: 'navy', name: 'Navy & Gold', bg: '#0f1b33', accent: '#d9b25c' },
+  { id: 'blackred', name: 'Black & Red', bg: '#0a0a0a', accent: '#d33a3a' },
 ];
 const THEME_KEY = 'mywrap.theme';
 const currentTheme = () => document.documentElement.dataset.theme || 'tobacco';
