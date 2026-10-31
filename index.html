@@ -9,7 +9,11 @@
 <meta name="theme-color" content="#17110d">
 <script>
   // Apply the saved color theme before anything draws, so it never flashes the default
-  try { const t = localStorage.getItem('mywrap.theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  try {
+    let t = localStorage.getItem('mywrap.theme');
+    if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'connecticut' : '';
+    if (t) document.documentElement.dataset.theme = t;
+  } catch {}
 </script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -1625,23 +1629,35 @@ function openProfileForm() {
 const THEMES = [
   { id: 'tobacco', name: 'Tobacco', bg: '#17110d', accent: '#d99a4e' },
   { id: 'connecticut', name: 'Connecticut', bg: '#f4ecdd', accent: '#a8692c' },
-  { id: 'navy', name: 'Navy & Gold', bg: '#0d172b', accent: '#d9b25c' },
-  { id: 'blackred', name: 'Black & Red', bg: '#0a0a0a', accent: '#d33a3a' },
+  { id: 'navy', name: 'Harbor', bg: '#0d172b', accent: '#d9b25c' },
+  { id: 'blackred', name: 'Smolder', bg: '#0a0a0a', accent: '#d33a3a' },
+  // Follows the phone's light/dark setting: Connecticut in light mode, Tobacco in dark
+  { id: 'auto', name: 'Auto', bg: 'linear-gradient(135deg, #17110d 50%, #f4ecdd 50%)', accent: '#d99a4e' },
 ];
 const THEME_KEY = 'mywrap.theme';
-const currentTheme = () => document.documentElement.dataset.theme || 'tobacco';
+const lightQuery = matchMedia('(prefers-color-scheme: light)');
+function savedTheme() {
+  let id = 'tobacco';
+  try { id = localStorage.getItem(THEME_KEY) || 'tobacco'; } catch {}
+  // A saved theme that was retired falls back to the default
+  return THEMES.some(t => t.id === id) ? id : 'tobacco';
+}
+const resolveTheme = id => id === 'auto' ? (lightQuery.matches ? 'connecticut' : 'tobacco') : id;
 
+function paintTheme() {
+  const id = resolveTheme(savedTheme());
+  if (id === 'tobacco') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = id;
+  document.querySelector('meta[name="theme-color"]').content = THEMES.find(t => t.id === id).bg;
+}
 function applyTheme(id) {
-  const t = THEMES.find(x => x.id === id) || THEMES[0];
-  if (t.id === 'tobacco') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t.id;
-  document.querySelector('meta[name="theme-color"]').content = t.bg;
-  try { localStorage.setItem(THEME_KEY, t.id); } catch {}
+  try { localStorage.setItem(THEME_KEY, id); } catch {}
+  paintTheme();
   renderThemePicker();
 }
 function renderThemePicker() {
   $('#theme-picker').innerHTML = THEMES.map(t => `
-    <button type="button" class="theme-opt ${currentTheme() === t.id ? 'on' : ''}" data-theme-id="${t.id}">
+    <button type="button" class="theme-opt ${savedTheme() === t.id ? 'on' : ''}" data-theme-id="${t.id}">
       <span class="swatch" style="background:${t.bg};--sw-accent:${t.accent}"></span>
       ${t.name}
     </button>`).join('');
@@ -1650,10 +1666,9 @@ $('#theme-picker').addEventListener('click', e => {
   const b = e.target.closest('[data-theme-id]');
   if (b) applyTheme(b.dataset.themeId);
 });
-// A saved theme that was retired falls back to the default
-if (!THEMES.some(t => t.id === currentTheme())) applyTheme('tobacco');
+lightQuery.addEventListener('change', () => { if (savedTheme() === 'auto') paintTheme(); });
+paintTheme();
 renderThemePicker();
-document.querySelector('meta[name="theme-color"]').content = (THEMES.find(t => t.id === currentTheme()) || THEMES[0]).bg;
 
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {
