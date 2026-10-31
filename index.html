@@ -10,7 +10,7 @@
 <script>
   // Apply the saved color theme before anything draws, so it never flashes the default
   try {
-    let t = localStorage.getItem('mywrap.theme');
+    let t = localStorage.getItem('mywrap.theme') || 'auto';
     if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'connecticut' : '';
     if (t) document.documentElement.dataset.theme = t;
   } catch {}
@@ -1637,10 +1637,10 @@ const THEMES = [
 const THEME_KEY = 'mywrap.theme';
 const lightQuery = matchMedia('(prefers-color-scheme: light)');
 function savedTheme() {
-  let id = 'tobacco';
-  try { id = localStorage.getItem(THEME_KEY) || 'tobacco'; } catch {}
+  let id = 'auto';
+  try { id = localStorage.getItem(THEME_KEY) || 'auto'; } catch {}
   // A saved theme that was retired falls back to the default
-  return THEMES.some(t => t.id === id) ? id : 'tobacco';
+  return THEMES.some(t => t.id === id) ? id : 'auto';
 }
 const resolveTheme = id => id === 'auto' ? (lightQuery.matches ? 'connecticut' : 'tobacco') : id;
 
