@@ -4,7 +4,7 @@
 
 - **Accounts.** Sign up with your email. To sign in, you type a 6-digit code that gets emailed to you (no password to remember). Email *links* are avoided on purpose: on iPhone, a home-screen app can't receive them, so the code is typed into the app instead.
 - **Sync.** Your journal, humidor, profile, badges and vault reviews are saved to your account. The app keeps working offline and catches up when you're back online. A new phone just needs you to sign in.
-- **Friend codes.** Every account gets a short code like `HJ-7K3Q9`, shown on your Profile with a **Share** button (opens the iPhone share sheet) and a **Copy** button.
+- **Friend codes.** Every account gets a short code like `MW-7K3Q9`, shown on your Profile with a **Share** button (opens the iPhone share sheet) and a **Copy** button.
 - **Follow by code.** Enter someone's code to follow them. It's one-way, like Instagram: you see their stuff, and they don't see yours unless they also enter your code. No approval step.
 - **What followers can see:**
   - Your smoking logs (cigar, rating, flavors, smoke notes, pairing, what you enjoyed). Any log can be marked **Keep private**.
@@ -31,7 +31,7 @@
    - Make sure Email is **enabled**.
    - Set the email OTP length to **6**.
 5. Go to **Authentication → Emails → Magic Link** template, and change the message so it shows the code:
-   `Your Humidor Journal code is {{ .Token }}`
+   `Your MyWrap code is {{ .Token }}`
 6. Go to **Project Settings → API**. Send Claude the **Project URL** and the **anon / publishable key**.
    - These two are *meant* to be inside the app. The database rules in `schema.sql` are what keep data safe.
    - **Never** share the `service_role` / secret key.

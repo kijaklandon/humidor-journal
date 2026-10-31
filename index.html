@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Humidor">
+<meta name="apple-mobile-web-app-title" content="MyWrap">
 <meta name="theme-color" content="#17110d">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>Humidor Journal</title>
+<title>MyWrap</title>
 <style>
   :root {
     --bg: #17110d;
@@ -248,7 +248,7 @@
 </head>
 <body>
 
-<header class="top"><h1>Humidor <span>Journal</span></h1></header>
+<header class="top"><h1>My<span>Wrap</span></h1></header>
 
 <main>
   <!-- JOURNAL -->
@@ -1044,7 +1044,7 @@ function reviewText() {
     if (r.status === 'ok') ok.push(`- ${name}`);
     if (r.status === 'fix') fix.push(`- ${name}${r.note ? ': ' + r.note : ''}`);
   }
-  return [`Humidor vault review (${today()})`,
+  return [`MyWrap vault review (${today()})`,
     fix.length ? '\nNeeds a fix:\n' + fix.join('\n') : '',
     ok.length ? '\nLooks right:\n' + ok.join('\n') : ''].join('\n').trim();
 }
@@ -1594,7 +1594,7 @@ $('#export-btn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify({ app: 'humidor', version: 1, logs, reviews, inventory, profile, achievements: earned }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `humidor-backup-${today()}.json`;
+  a.download = `mywrap-backup-${today()}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 });

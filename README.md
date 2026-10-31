@@ -1,4 +1,4 @@
-# Humidor Journal
+# MyWrap
 
 A cigar journal: log the cigars you smoke, note what you enjoyed, and get personal recommendations.
 

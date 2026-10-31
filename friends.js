@@ -15,10 +15,11 @@ const initialsOf = name => (name || '').split(/\s+/).filter(Boolean).slice(0, 2)
 const personAvatar = (p, size = 40) =>
   `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc(initialsOf(p.name) || '•')}</div>`;
 
-// Codes look like HJ-7K3Q9. Accept "7k3q9", "hj 7k3q9", etc.
+// Codes look like MW-7K3Q9. Accept "7k3q9", "mw 7k3q9", and old "HJ-" codes from
+// when the app was called Humidor Journal (same letters, new prefix).
 function normalizeCode(raw) {
   const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  return 'HJ-' + (c.startsWith('HJ') ? c.slice(2) : c);
+  return 'MW-' + (/^(MW|HJ)/.test(c) ? c.slice(2) : c);
 }
 
 // ---------- Loading ----------
@@ -169,7 +170,7 @@ function peopleHtml() {
       <div class="card-title">Add a friend</div>
       <p class="muted" style="margin:4px 0 10px;font-size:14px">Enter their friend code to follow them.</p>
       <div style="display:flex;gap:8px">
-        <input type="text" id="fr-code" placeholder="HJ-7K3Q9" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:1px">
+        <input type="text" id="fr-code" placeholder="MW-7K3Q9" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:1px">
         <button class="btn" data-act="follow" style="flex:none">Follow</button>
       </div>
     </div>
@@ -382,9 +383,9 @@ async function followCode() {
 async function shareCode() {
   const code = account?.friendCode;
   if (!code) return toast('Your code is still loading');
-  const text = `Follow me on Humidor Journal! My friend code is ${code}`;
+  const text = `Follow me on MyWrap! My friend code is ${code}`;
   if (navigator.share) {
-    try { await navigator.share({ title: 'Humidor Journal', text, url: APP_URL }); } catch {}
+    try { await navigator.share({ title: 'MyWrap', text, url: APP_URL }); } catch {}
   } else {
     copyText(`${text} ${APP_URL}`);
   }

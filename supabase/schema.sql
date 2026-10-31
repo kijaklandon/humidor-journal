@@ -1,5 +1,5 @@
 -- ============================================================
---  Humidor Journal: accounts, sync and friends
+--  MyWrap: accounts, sync and friends
 --  Run once in Supabase: SQL Editor -> New query -> paste all -> Run
 --
 --  Who can see what (enforced by the database, not the app):
@@ -96,7 +96,7 @@ create trigger user_state_touch before update on public.user_state for each row 
 
 -- ---------- Friend codes & new accounts ----------
 
--- Codes look like HJ-7K3Q9. No 0/O or 1/I, so they're easy to read aloud.
+-- Codes look like MW-7K3Q9. No 0/O or 1/I, so they're easy to read aloud.
 create or replace function public.new_friend_code() returns text
 language plpgsql as $$
 declare
@@ -104,7 +104,7 @@ declare
   code text;
 begin
   loop
-    code := 'HJ-';
+    code := 'MW-';
     for i in 1..5 loop
       code := code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
     end loop;

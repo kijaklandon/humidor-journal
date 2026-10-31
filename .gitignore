@@ -1,5 +1,6 @@
 # Journal backups exported from the app (personal data)
 humidor-backup-*.json
+mywrap-backup-*.json
 
 # Windows clutter
 Thumbs.db

@@ -1,7 +1,7 @@
 {
-  "name": "Humidor Journal",
-  "short_name": "Humidor",
-  "description": "Log the cigars you smoke and get personal recommendations.",
+  "name": "MyWrap",
+  "short_name": "MyWrap",
+  "description": "Wishlist · Rate · Archive · Pair. Your cigar journal, with friends and personal recommendations.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#17110d",
