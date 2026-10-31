@@ -1652,10 +1652,19 @@ function paintTheme() {
   else document.documentElement.dataset.theme = id;
   document.querySelector('meta[name="theme-color"]').content = THEMES.find(t => t.id === id).bg;
 }
-function applyTheme(id) {
-  try { localStorage.setItem(THEME_KEY, id); } catch {}
+// When the theme was last picked; sync keeps the newest pick across devices
+const THEME_AT_KEY = 'mywrap.themeAt';
+function themeAt() {
+  try { return Number(localStorage.getItem(THEME_AT_KEY)) || 0; } catch { return 0; }
+}
+function setTheme(id, at) {
+  try { localStorage.setItem(THEME_KEY, id); localStorage.setItem(THEME_AT_KEY, at); } catch {}
   paintTheme();
   renderThemePicker();
+}
+function applyTheme(id) {
+  setTheme(id, Date.now());
+  changed();
 }
 function renderThemePicker() {
   $('#theme-picker').innerHTML = THEMES.map(t => `

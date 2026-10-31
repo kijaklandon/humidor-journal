@@ -58,6 +58,7 @@ create table public.user_state (
   reviews jsonb not null default '{}',
   achievements jsonb not null default '{}',
   humidor_peak int not null default 0,
+  settings jsonb not null default '{}',   -- app preferences, e.g. { theme, themeAt }
   updated_at timestamptz not null default now()
 );
 

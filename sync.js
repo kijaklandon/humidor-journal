@@ -130,9 +130,21 @@ async function syncNow() {
       if (!mergedEarned[k] || t < mergedEarned[k]) mergedEarned[k] = t;
     }
     const mergedPeak = Math.max(humidorPeak, st.humidor_peak || 0);
+    const statePatch = {};
     if (canon(mergedReviews) !== canon(st.reviews || {}) || canon(mergedEarned) !== canon(st.achievements || {}) || mergedPeak !== st.humidor_peak) {
-      const { error } = await sb.from('user_state')
-        .update({ reviews: mergedReviews, achievements: mergedEarned, humidor_peak: mergedPeak }).eq('user_id', uid);
+      Object.assign(statePatch, { reviews: mergedReviews, achievements: mergedEarned, humidor_peak: mergedPeak });
+    }
+    // Color theme: the most recent pick on any device wins
+    // (skipped until supabase/add-settings.sql has added the settings column)
+    let remoteTheme = null;
+    if ('settings' in st) {
+      const set = st.settings || {};
+      const localAt = themeAt(), remoteAt = Number(set.themeAt) || 0;
+      if (remoteAt > localAt && set.theme) remoteTheme = set;
+      else if (localAt > remoteAt) statePatch.settings = { ...set, theme: savedTheme(), themeAt: localAt };
+    }
+    if (Object.keys(statePatch).length) {
+      const { error } = await sb.from('user_state').update(statePatch).eq('user_id', uid);
       if (error) throw error;
     }
 
@@ -152,6 +164,7 @@ async function syncNow() {
       localStorage.setItem(ACH_KEY, JSON.stringify(earned));
       localStorage.setItem(PEAK_KEY, humidorPeak);
     } catch {}
+    if (remoteTheme) setTheme(remoteTheme.theme, remoteTheme.themeAt);
     applyingRemote = false;
 
     saveBase({
