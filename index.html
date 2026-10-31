@@ -30,21 +30,21 @@
     --radius: 14px;
   }
   /* ---------- Color themes (Profile > Appearance) ---------- */
-  [data-theme="maduro"] {
-    --bg: #0e0b0a; --surface: #1a1412; --surface-2: #241b18; --border: #33251f;
-    --text: #f1e6dc; --muted: #a8978a; --accent: #c0603f; --accent-ink: #fff3ea; --off: #4a3830;
-  }
   [data-theme="connecticut"] {
     --bg: #f4ecdd; --surface: #fffaf1; --surface-2: #efe3cd; --border: #dfcfb4;
     --text: #2b2118; --muted: #7a6a58; --accent: #a8692c; --accent-ink: #fffaf1; --danger: #b5442f; --off: #d6c4a8;
   }
-  [data-theme="cedar"] {
-    --bg: #1c1210; --surface: #2a1a16; --surface-2: #36221c; --border: #472c24;
-    --text: #f6e7dd; --muted: #c4a596; --accent: #e07a4f; --accent-ink: #1c1210; --off: #5e3a2e;
-  }
   [data-theme="lounge"] {
     --bg: #0f1612; --surface: #18221c; --surface-2: #212e26; --border: #2c3b31;
     --text: #ecefe6; --muted: #a3b0a2; --accent: #c9a45c; --accent-ink: #10170f; --off: #3c4a40;
+  }
+  [data-theme="habano"] {
+    --bg: #170c0e; --surface: #241316; --surface-2: #2f1a1e; --border: #3f2328;
+    --text: #f5e8e4; --muted: #c0a2a0; --accent: #d8b25a; --accent-ink: #1f1408; --off: #55313a;
+  }
+  [data-theme="ash"] {
+    --bg: #141516; --surface: #1e2022; --surface-2: #282a2d; --border: #34373a;
+    --text: #eceeef; --muted: #a2a7ab; --accent: #ef7d45; --accent-ink: #1a0f08; --off: #44484c;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -1628,10 +1628,10 @@ function openProfileForm() {
 // Colors live in the CSS ([data-theme] blocks); these are just for the picker swatches
 const THEMES = [
   { id: 'tobacco', name: 'Tobacco', bg: '#17110d', accent: '#d99a4e' },
-  { id: 'maduro', name: 'Maduro', bg: '#0e0b0a', accent: '#c0603f' },
-  { id: 'connecticut', name: 'Connecticut', bg: '#f4ecdd', accent: '#a8692c' },
-  { id: 'cedar', name: 'Cedar', bg: '#1c1210', accent: '#e07a4f' },
+  { id: 'habano', name: 'Habano', bg: '#170c0e', accent: '#d8b25a' },
   { id: 'lounge', name: 'Lounge', bg: '#0f1612', accent: '#c9a45c' },
+  { id: 'ash', name: 'Ash', bg: '#141516', accent: '#ef7d45' },
+  { id: 'connecticut', name: 'Connecticut', bg: '#f4ecdd', accent: '#a8692c' },
 ];
 const THEME_KEY = 'mywrap.theme';
 const currentTheme = () => document.documentElement.dataset.theme || 'tobacco';
@@ -1655,6 +1655,8 @@ $('#theme-picker').addEventListener('click', e => {
   const b = e.target.closest('[data-theme-id]');
   if (b) applyTheme(b.dataset.themeId);
 });
+// A saved theme that was retired falls back to the default
+if (!THEMES.some(t => t.id === currentTheme())) applyTheme('tobacco');
 renderThemePicker();
 document.querySelector('meta[name="theme-color"]').content = (THEMES.find(t => t.id === currentTheme()) || THEMES[0]).bg;
 
