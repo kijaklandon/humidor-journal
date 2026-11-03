@@ -941,4 +941,23 @@ const CATALOG = [
   { b: 'Illusione', n: 'Gigantes Connecticut', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Sweet'], checked: true },
   { b: 'Illusione', n: 'Rothchildes CT', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 2, notes: ['Cream', 'Sweet', 'Cedar', 'Nuts'], checked: true },
   { b: 'Illusione', n: 'Garagiste', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua (Viso Corojo, Viso Criollo)', o: 'Nicaragua', s: 4, notes: ['Earth', 'Spice', 'Leather', 'Cedar'], checked: true },
+
+  // ===== Expansion batch 5 (Nov 2026): Perdomo (official specs), Tatuaje and La Flor Dominicana (trade press, not yet confirmed). =====
+  { b: 'Perdomo', n: 'Legacy Connecticut', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Coffee'], checked: true },
+  { b: 'Perdomo', n: 'Legacy Shade Grown', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cedar', 'Spice', 'Nuts', 'Earth'], checked: true },
+  { b: 'Perdomo', n: 'Legacy Maduro', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'], checked: true },
+  { b: 'Perdomo', n: '30th Anniversary Connecticut', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'], checked: true },
+  { b: 'Perdomo', n: '30th Anniversary Sun Grown', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'], checked: true },
+  { b: 'Perdomo', n: '30th Anniversary Maduro', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'], checked: true },
+  { b: 'Perdomo', n: 'Inmenso Seventy Sun Grown', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Nuts'], checked: true },
+  { b: 'Perdomo', n: 'Inmenso Seventy Maduro', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'], checked: true },
+  { b: 'Tatuaje', n: 'Tattoo', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'] },
+  { b: 'Tatuaje', n: 'Cabaiguan', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Spice'] },
+  { b: 'Tatuaje', n: 'Reserva Broadleaf', w: 'Broadleaf', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Pepper'] },
+  { b: 'Tatuaje', n: 'Cohetes Corojo', w: 'Corojo', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Pepper', 'Leather', 'Cedar'], status: 'limited' },
+  { b: 'Tatuaje', n: 'Cojonú', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 5, notes: ['Pepper', 'Earth', 'Leather', 'Cocoa'], status: 'limited' },
+  { b: 'Tatuaje', n: 'TAA', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'], status: 'limited' },
+  { b: 'Tatuaje', n: '20th Anniversary', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Earth'], status: 'limited' },
+  { b: 'Tatuaje', n: 'Monster Series', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Earth', 'Pepper', 'Leather', 'Cocoa'], status: 'limited' },
+  { b: 'La Flor Dominicana', n: 'Suave', w: 'Connecticut', o: 'Dominican Republic', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
 ];
