@@ -1228,4 +1228,19 @@ const CATALOG = [
   { b: 'Kafie 1901', n: 'Don Fernando Maduro', w: 'Maduro', bi: 'Cameroon', f: 'Dominican Republic, USA (Pennsylvania), Nicaragua', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
   { b: 'Kafie 1901', n: 'Sumatra', w: 'Sumatra', bi: 'Dominican Republic', f: 'Dominican Republic, Nicaragua, Peru', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
   { b: 'Kafie 1901', n: 'Connecticut', w: 'Connecticut', bi: 'Honduras', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', fac: 'La Aurora', s: 1, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+
+  // ===== Expansion batch 18 (Nov 2026): La Palina, Oscar Valladares, Villiger San'Doro, Ave Maria. From trade press and retailers, not yet confirmed. =====
+  { b: 'La Palina', n: 'Classic Connecticut', w: 'Connecticut', bi: 'Dominican Republic', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
+  { b: 'La Palina', n: 'Black Label', w: 'Maduro', bi: 'Dominican Republic, Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 5, notes: ['Cocoa', 'Coffee', 'Earth', 'Pepper'] },
+  { b: 'La Palina', n: 'Goldie', w: 'Habano', bi: 'Ecuador', f: 'Dominican Republic, Nicaragua', o: 'USA', fac: 'El Titan de Bronze', s: 3, notes: ['Spice', 'Cedar', 'Cream', 'Sweet'], status: 'limited' },
+  { b: 'Oscar Valladares', n: 'Super Fly', w: 'San Andrés', bi: 'Honduras', f: 'Dominican Republic, Honduras, Nicaragua', o: 'Honduras', s: 4, notes: ['Cocoa', 'Earth', 'Spice', 'Sweet'] },
+  { b: 'Oscar Valladares', n: '2012 Sumatra', w: 'Sumatra', bi: 'Honduras', f: 'Honduras, Nicaragua', o: 'Honduras', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
+  { b: 'Oscar Valladares', n: 'Altar Q', w: 'Sumatra', bi: 'Honduras (Copán)', f: 'Honduras (Copán)', o: 'Honduras', s: 3, notes: ['Cedar', 'Earth', 'Spice', 'Nuts'] },
+  { b: 'Villiger', n: "San'Doro Claro", w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+  { b: 'Villiger', n: "San'Doro Colorado", w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'] },
+  { b: 'Villiger', n: "San'Doro Maduro", w: 'Maduro', bi: 'Brazil (Mata Norte)', f: 'Brazil (Mata Fina, Mata Norte)', o: 'Other', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Spice'] },
+  { b: 'Ave Maria', n: 'Knights Templar', w: 'Habano', bi: 'Nicaragua (Habano)', f: 'Nicaragua, Honduras', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Earth'] },
+  { b: 'Ave Maria', n: 'Reconquista', w: 'Habano', bi: 'Honduras', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 5, notes: ['Pepper', 'Earth', 'Cocoa', 'Leather'] },
+  { b: 'Ave Maria', n: 'Immaculata', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+  { b: 'Ave Maria', n: 'Argentum', w: 'Broadleaf', bi: 'Nicaragua', f: 'Honduras, Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Leather'] },
 ];
