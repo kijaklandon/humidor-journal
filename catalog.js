@@ -1137,4 +1137,18 @@ const CATALOG = [
   { b: 'Kristoff', n: 'GC Signature Series', w: 'Maduro', bi: 'Honduras', f: 'Dominican Republic, Honduras, Nicaragua', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'] },
   { b: 'Kristoff', n: 'Kristania', w: 'Habano', bi: 'Dominican Republic (Habano)', f: 'Dominican Republic (Habano)', o: 'Dominican Republic', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'] },
   { b: 'Kristoff', n: 'Habano', w: 'Habano', bi: 'Brazil (Sumatra)', f: 'Nicaragua, Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Spice', 'Cedar', 'Earth', 'Sweet'] },
+
+  // ===== Expansion batch 12 (Nov 2026): Toraño, Nat Sherman, Zino, and everyday machine-made cigars. From trade press and retailers, not yet confirmed. =====
+  { b: 'Toraño', n: 'Exodus 1959 50 Years', w: 'Other', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
+  { b: 'Toraño', n: 'Exodus 1959 Finite', w: 'Habano', bi: 'Nicaragua (Jalapa)', f: 'Nicaragua (Estelí, Condega, Ometepe)', o: 'Nicaragua', s: 2, notes: ['Cedar', 'Sweet', 'Cream', 'Spice'], status: 'limited' },
+  { b: 'Nat Sherman', n: 'Timeless Prestige', w: 'Habano', bi: 'Dominican Republic', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Earth'] },
+  { b: 'Nat Sherman', n: 'Timeless Panamericana', w: 'Sumatra', bi: 'Nicaragua', f: 'Costa Rica, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'] },
+  { b: 'Nat Sherman', n: 'Metropolitan Habano', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'] },
+  { b: 'Zino', n: 'Platinum Scepter', w: 'Connecticut', bi: 'USA (Connecticut)', f: 'Dominican Republic, Peru', o: 'Dominican Republic', fac: 'Davidoff', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Wood'] },
+  { b: 'Zino', n: 'Platinum Z-Class', w: 'Other', bi: 'Peru', f: 'Nicaragua, Honduras', o: 'Dominican Republic', fac: 'Davidoff', s: 4, notes: ['Earth', 'Spice', 'Cedar', 'Leather'] },
+  { b: 'Backwoods', n: 'Original', w: 'Broadleaf', f: 'Dominican Republic', o: 'USA', s: 2, notes: ['Sweet', 'Earth', 'Wood', 'Toast'] },
+  { b: 'Swisher Sweets', n: 'Original', w: 'Other', o: 'USA', s: 1, notes: ['Sweet', 'Toast', 'Wood', 'Honey'] },
+  { b: 'Black & Mild', n: 'Original', w: 'Other', o: 'USA', s: 2, notes: ['Sweet', 'Wood', 'Toast', 'Cream'] },
+  { b: 'Dutch Masters', n: 'Corona de Luxe', w: 'Other', o: 'USA', s: 1, notes: ['Sweet', 'Toast', 'Wood', 'Cedar'] },
+  { b: 'White Owl', n: 'Original', w: 'Other', o: 'USA', s: 1, notes: ['Sweet', 'Toast', 'Wood', 'Honey'] },
 ];
