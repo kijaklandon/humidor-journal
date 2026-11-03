@@ -269,6 +269,17 @@
   }
   nav.tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   nav.tabs button.active { color: var(--accent); }
+  /* Log: a raised gold button in the middle of the bar */
+  nav.tabs button.tab-main { padding-top: 0; }
+  nav.tabs .fab {
+    width: 54px; height: 54px; margin-top: -20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: var(--accent-ink);
+    border: 4px solid var(--bg); box-shadow: 0 4px 14px rgba(0,0,0,.35);
+    transition: transform .15s;
+  }
+  nav.tabs .fab svg { width: 26px; height: 26px; stroke-width: 2.4; }
+  nav.tabs button.tab-main:active .fab { transform: scale(.94); }
 
   /* Detail sheet */
   .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
@@ -465,7 +476,7 @@
 <nav class="tabs">
   <button data-view="journal" class="active"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></svg>Journal</button>
   <button data-view="browse"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Browse</button>
-  <button data-view="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log</button>
+  <button data-view="add" class="tab-main" aria-label="Log a cigar"><span class="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Log</button>
   <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
   <button data-view="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.9-3 3.2-4.5 6-4.5s5.1 1.5 6 4.5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15.5 14.6c2.6-.3 4.6 1 5.5 3.9"/></svg>Friends</button>
 </nav>
