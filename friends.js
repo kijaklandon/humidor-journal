@@ -9,7 +9,7 @@ let feedCache = null;      // [{ person, log }]
 let friendsLoading = false;
 let friendsSeg = 'feed';
 
-const APP_URL = 'https://kijaklandon.github.io/humidor-journal/';
+const APP_URL = 'https://mywrapcigars.com/';
 const personName = p => p.name || p.friend_code || 'Cigar friend';
 const initialsOf = name => (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 const personAvatar = (p, size = 40) =>
