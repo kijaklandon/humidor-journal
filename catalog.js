@@ -1120,4 +1120,21 @@ const CATALOG = [
   { b: 'Ventura', n: 'PSyKo Seven', w: 'Other', bi: 'Mexico (Sumatra)', o: 'Dominican Republic', s: 2, notes: ['Cedar', 'Cream', 'Spice', 'Sweet'] },
   { b: 'Ventura', n: 'PSyKo Seven Connecticut', w: 'Connecticut', bi: 'Dominican Republic (San Vicente)', o: 'Dominican Republic', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
   { b: 'Ventura', n: 'PSyKo Seven Nicaragua', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua (Condega, Estelí, Jalapa)', o: 'Nicaragua', s: 3, notes: ['Cream', 'Pepper', 'Cedar', 'Nuts'] },
+
+  // ===== Expansion batch 11 (Nov 2026): Caldwell, Quesada, Casa Magna, Black Works, Kristoff. From trade press, not yet confirmed. =====
+  { b: 'Caldwell', n: 'Eastern Standard Midnight Express', w: 'Maduro', bi: 'Dominican Republic (Habano)', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'] },
+  { b: 'Caldwell', n: "Blind Man's Bluff Maduro", w: 'Broadleaf', bi: 'Indonesia (Sumatra)', f: 'Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Cedar'] },
+  { b: 'Caldwell', n: 'Anastasia', w: 'Other', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Pepper', 'Cocoa', 'Cream'] },
+  { b: 'Quesada', n: '40th Anniversary', w: 'San Andrés', bi: 'Dominican Republic', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Earth', 'Spice', 'Sweet'], status: 'limited' },
+  { b: 'Quesada', n: 'Selección España', w: 'Other', bi: 'Dominican Republic', f: 'Dominican Republic, Connecticut Broadleaf, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'] },
+  { b: 'Quesada', n: 'Reserva Privada', w: 'Connecticut', bi: 'Dominican Republic (San Vicente)', f: 'Dominican Republic, USA (Pennsylvania)', o: 'Dominican Republic', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Spice'] },
+  { b: 'Quesada', n: 'Reserva Privada Oscuro', w: 'Broadleaf', bi: 'Dominican Republic (Criollo)', f: 'Dominican Republic, USA (Pennsylvania)', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Leather'] },
+  { b: 'Casa Magna', n: 'Liga F', w: 'Corojo', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Quesada', s: 4, notes: ['Spice', 'Pepper', 'Leather', 'Cedar'] },
+  { b: 'Black Works Studio', n: 'Green Hornet', w: 'Other', bi: 'Nicaragua (Habano)', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Spice'] },
+  { b: 'Black Works Studio', n: 'Hyena', w: 'Cameroon', bi: 'Nicaragua (Habano)', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'], status: 'limited' },
+  { b: 'Kristoff', n: 'Pistoff Kristoff', w: 'San Andrés', bi: 'Indonesia', f: 'Nicaragua', o: 'Nicaragua', s: 5, notes: ['Cocoa', 'Pepper', 'Earth', 'Coffee'] },
+  { b: 'Kristoff', n: 'Mildly Pistoff Kristoff', w: 'Connecticut', bi: 'Indonesia', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Pepper', 'Nuts'] },
+  { b: 'Kristoff', n: 'GC Signature Series', w: 'Maduro', bi: 'Honduras', f: 'Dominican Republic, Honduras, Nicaragua', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Coffee', 'Sweet', 'Earth'] },
+  { b: 'Kristoff', n: 'Kristania', w: 'Habano', bi: 'Dominican Republic (Habano)', f: 'Dominican Republic (Habano)', o: 'Dominican Republic', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'] },
+  { b: 'Kristoff', n: 'Habano', w: 'Habano', bi: 'Brazil (Sumatra)', f: 'Nicaragua, Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Spice', 'Cedar', 'Earth', 'Sweet'] },
 ];
