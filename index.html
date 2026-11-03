@@ -65,7 +65,8 @@
   header.top { display: flex; align-items: center; justify-content: space-between; }
   .icon-btn { background: none; border: none; padding: 4px; margin: -4px; color: var(--muted); cursor: pointer; display: inline-flex; }
   .icon-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .icon-btn:hover, .icon-btn:active { color: var(--accent); }
+  .icon-btn:hover, .icon-btn:active, .icon-btn.active { color: var(--accent); }
+  .top-actions { display: flex; align-items: center; gap: 20px; }
   .back-btn { background: none; border: none; padding: 0; margin: 0 0 12px; font: inherit; font-size: 15px; color: var(--accent); cursor: pointer; }
   main { max-width: 640px; margin: 0 auto; padding: 16px; }
   .view { display: none; }
@@ -257,7 +258,7 @@
   /* Bottom tabs */
   nav.tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    display: grid; grid-template-columns: repeat(6, 1fr);
+    display: grid; grid-template-columns: repeat(5, 1fr);
     background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(10px);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
@@ -294,9 +295,14 @@
 
 <header class="top">
   <h1>My<span>Wrap</span></h1>
-  <button type="button" class="icon-btn" id="settings-btn" aria-label="Settings" hidden>
+  <div class="top-actions">
+  <button type="button" class="icon-btn" id="profile-btn" aria-label="Profile">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>
+  </button>
+  <button type="button" class="icon-btn" id="settings-btn" aria-label="Settings">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
+  </div>
 </header>
 
 <main>
@@ -412,7 +418,7 @@
 
   <!-- SETTINGS (opened from the gear on Profile) -->
   <section id="view-settings" class="view">
-    <button type="button" class="back-btn" id="settings-back">‹ Profile</button>
+    <button type="button" class="back-btn" id="settings-back">‹ Back</button>
     <h2 style="margin:0 0 4px">Settings</h2>
     <h3>Account</h3>
     <div id="account"></div>
@@ -462,7 +468,6 @@
   <button data-view="browse"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Browse</button>
   <button data-view="recs"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>For You</button>
   <button data-view="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.9-3 3.2-4.5 6-4.5s5.1 1.5 6 4.5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15.5 14.6c2.6-.3 4.6 1 5.5 3.9"/></svg>Friends</button>
-  <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>Profile</button>
 </nav>
 
 <div class="backdrop" id="sheet"><div class="sheet" id="sheet-body"></div></div>
@@ -527,10 +532,11 @@ function findCatalog(text) {
 // ---------- Navigation ----------
 function show(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
-  // Settings lives under the Profile tab
-  const tab = view === 'settings' ? 'more' : view;
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === tab));
-  $('#settings-btn').hidden = view !== 'more';
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  // Profile and Settings live in the top bar
+  $('#profile-btn').classList.toggle('active', view === 'more');
+  $('#settings-btn').classList.toggle('active', view === 'settings');
+  if (view !== 'settings') lastView = view;
   if (view === 'journal') renderJournal();
   if (view === 'recs') renderRecs();
   if (view === 'browse') renderBrowse();
@@ -542,8 +548,11 @@ document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('cl
   if (b.dataset.view === 'add') resetForm();
   show(b.dataset.view);
 }));
+// Settings' back button returns to wherever you came from
+let lastView = 'journal';
+$('#profile-btn').addEventListener('click', () => show('more'));
 $('#settings-btn').addEventListener('click', () => show('settings'));
-$('#settings-back').addEventListener('click', () => show('more'));
+$('#settings-back').addEventListener('click', () => show(lastView));
 
 // ---------- Form ----------
 let formRating = 0;
