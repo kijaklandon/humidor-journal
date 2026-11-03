@@ -1182,4 +1182,21 @@ const CATALOG = [
   { b: 'Don Tomás', n: 'Clásico Maduro', w: 'Broadleaf', bi: 'Honduras', f: 'Dominican Republic, Honduras', o: 'Honduras', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
   { b: 'Graycliff', n: 'Espresso', w: 'Maduro', bi: 'Cameroon', f: 'Ecuador, Philippines, Nicaragua', o: 'Other', s: 5, notes: ['Coffee', 'Cocoa', 'Earth', 'Pepper'] },
   { b: 'Cusano', n: 'CC', w: 'Habano', f: 'Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'] },
+
+  // ===== Expansion batch 15 (Nov 2026): Cornelius & Anthony, Ezra Zion, Rocky Patel Tabaquero, Asylum. From trade press, not yet confirmed. =====
+  { b: 'Cornelius & Anthony', n: 'Cornelius', w: 'Other', bi: 'Ecuador', f: 'Nicaragua', o: 'USA', fac: 'El Titan de Bronze', s: 3, notes: ['Cedar', 'Spice', 'Cream', 'Sweet'] },
+  { b: 'Cornelius & Anthony', n: 'Daddy Mac', w: 'Other', bi: 'Ecuador', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Earth', 'Cocoa', 'Spice', 'Sweet'] },
+  { b: 'Cornelius & Anthony', n: 'Meridian', w: 'Rosado', bi: 'Nicaragua', f: 'Nicaragua, Dominican Republic', o: 'Nicaragua', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Nuts'] },
+  { b: 'Cornelius & Anthony', n: 'Venganza', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Spice', 'Leather', 'Earth'] },
+  { b: 'Cornelius & Anthony', n: 'Aerial', w: 'Connecticut', bi: 'USA', f: 'Nicaragua', o: 'Nicaragua', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
+  { b: 'Ezra Zion', n: 'Jamais Vu', w: 'Corojo', bi: 'Nicaragua (Corojo, Criollo)', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Pepper', 'Leather', 'Cedar'] },
+  { b: 'Ezra Zion', n: 'Eminence', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
+  { b: 'Ezra Zion', n: 'Tantrum', w: 'Corojo', bi: 'Nicaragua (Corojo)', f: 'Nicaragua (Corojo, Criollo)', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Spice', 'Earth', 'Leather'] },
+  { b: 'Ezra Zion', n: 'FHK', w: 'San Andrés', bi: 'Indonesia', f: 'Brazil, Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Earth', 'Spice', 'Sweet'], status: 'limited' },
+  { b: 'Ezra Zion', n: 'Honor Series Reagan', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Earth'], status: 'limited' },
+  { b: 'Rocky Patel', n: 'Tabaquero by Hamlet Paredes', w: 'San Andrés', bi: 'Brazil, Mexico', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cocoa', 'Earth', 'Spice', 'Sweet'] },
+  { b: 'Asylum', n: 'Insidious', w: 'Connecticut', bi: 'Honduras', f: 'Honduras', o: 'Honduras', s: 2, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
+  { b: 'Asylum', n: 'Straight Jacket', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Earth', 'Leather', 'Cocoa'] },
+  { b: 'Asylum', n: 'Nyctophilia', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
+  { b: 'Asylum', n: 'Schizo', w: 'Other', o: 'Honduras', s: 2, notes: ['Cedar', 'Earth', 'Sweet', 'Spice'] },
 ];
