@@ -139,8 +139,6 @@
 
   .badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
   .tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
-  .tag.ok { border-color: #6f9a5a; color: #9cc884; }
-  .tag.warn { border-color: var(--danger); color: var(--danger); }
   .tag.mine { border-color: var(--accent); color: var(--accent); }
   .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .avatar {
@@ -401,36 +399,33 @@
   <section id="view-more" class="view">
     <div id="account"></div>
     <div id="profile"></div>
-    <h3>Settings & data</h3>
+    <h3>Look & feel</h3>
     <div class="card">
-      <div class="card-title">Appearance</div>
+      <div class="card-title">Color theme</div>
       <div class="theme-grid" id="theme-picker"></div>
+      <label class="toggle field" style="margin:16px 0 0"><input type="checkbox" id="pref-hide-cubans"> <span style="margin:0;color:var(--text)">Hide Cuban cigars <span class="muted" style="font-size:13px">· from Browse, For You and suggestions when logging</span></span></label>
     </div>
+
+    <h3>Your data</h3>
     <div class="card">
-      <div class="card-title">Preferences</div>
-      <label class="toggle field" style="margin:10px 0 0"><input type="checkbox" id="pref-hide-cubans"> <span style="margin:0;color:var(--text)">Hide Cuban cigars <span class="muted" style="font-size:13px">· from Browse, For You and suggestions when logging</span></span></label>
-    </div>
-    <div class="card">
-      <div class="card-title">Your data</div>
-      <p class="muted" style="margin:6px 0 12px">Your journal is saved on this device. Make a backup now and then so you never lose it.</p>
+      <div class="card-title">Backup file</div>
+      <p class="muted" style="margin:6px 0 12px">Signed in? Your journal is already backed up to your account. You can also save a copy as a file.</p>
       <div class="btn-row">
         <button class="btn small ghost" id="export-btn">Export backup</button>
         <button class="btn small ghost" id="import-btn">Import backup</button>
       </div>
       <input type="file" id="import-file" accept="application/json,.json" hidden>
     </div>
-    <div class="card">
-      <div class="card-title">Your vault review</div>
-      <p class="muted" id="review-summary" style="margin:6px 0 12px"></p>
-      <button class="btn small ghost" id="copy-review">Copy reviews for Claude</button>
-    </div>
-    <div class="card">
+    <button class="btn danger block" id="clear-btn">Delete all my data</button>
+
+    <h3>Help</h3>
+    <div class="card" id="home-screen-tip">
       <div class="card-title">Add to your iPhone home screen</div>
-      <p class="muted" style="margin:6px 0 0">Open this app in Safari, tap the Share button, then choose <b>Add to Home Screen</b>. It will open full screen like a regular app.</p>
+      <p class="muted" style="margin:6px 0 0">Open mywrapcigars.com in Safari, tap the Share button, then choose <b>Add to Home Screen</b>. It will open full screen like a regular app.</p>
     </div>
     <div class="card">
-      <div class="card-title">About recommendations</div>
-      <p class="muted" style="margin:6px 0 0">Suggestions come from your ratings, wrappers, countries, strength and flavor notes, matched against a built-in list of popular cigars. Flavor profiles are general guides; every cigar smokes a little differently.</p>
+      <div class="card-title">How recommendations work</div>
+      <p class="muted" style="margin:6px 0 0">Suggestions come from your ratings, wrappers, countries, strength and flavor notes, matched against MyWrap's vault of cigars. Flavor profiles are general guides; every cigar smokes a little differently.</p>
     </div>
     <div class="card">
       <div class="card-title">Contact us</div>
@@ -440,7 +435,6 @@
         <a class="btn small" href="mailto:hello@mywrapcigars.com?subject=MyWrap" style="text-decoration:none;text-align:center">Email us</a>
       </div>
     </div>
-    <button class="btn danger block" id="clear-btn">Delete all my data</button>
   </section>
 </main>
 
@@ -519,7 +513,7 @@ function show(view) {
   if (view === 'journal') renderJournal();
   if (view === 'recs') renderRecs();
   if (view === 'browse') renderBrowse();
-  if (view === 'more') { renderProfile(); renderReviewSummary(); }
+  if (view === 'more') renderProfile();
   if (view === 'friends' && typeof renderFriends === 'function') renderFriends();
   window.scrollTo(0, 0);
 }
@@ -793,8 +787,7 @@ function renderSmoked() {
     $('#search').style.display = 'none';
     $('#journal-list').innerHTML = `
       <div class="empty card">
-        <div class="big">🍂</div>
-        <h2>Your humidor is empty</h2>
+        <h2>No cigars logged yet</h2>
         <p class="muted">Log the cigars you smoke and what you liked about them. After a few, you'll get personal recommendations.</p>
         <button class="btn" onclick="resetForm(); show('add')">Log your first cigar</button>
       </div>`;
@@ -1055,13 +1048,10 @@ function renderBrowse() {
   let html = '', brand = null;
   for (const c of list) {
     if (c.b !== brand) { brand = c.b; html += `<h3>${esc(brand)}</h3>`; }
-    const r = reviews[fullName(c)];
     const tags = [
       isSmoked(c, smoked) ? '<span class="tag mine">Smoked</span>' : '',
       c.status === 'limited' ? '<span class="tag">Limited</span>' : '',
       c.status === 'discontinued' ? '<span class="tag">Discontinued</span>' : '',
-      r?.status === 'ok' || c.verified ? '<span class="tag ok">✓ Right</span>' : '',
-      r?.status === 'fix' ? '<span class="tag warn">Needs fix</span>' : '',
       invCount(c) ? `<span class="tag mine">Humidor ×${invCount(c)}</span>` : '',
     ].join('');
     html += `
@@ -1083,8 +1073,8 @@ $('#browse-list').addEventListener('click', e => {
 function openCigar(name) {
   const c = CATALOG.find(x => fullName(x) === name);
   if (!c) return;
-  const r = reviews[name] || {};
   const status = { limited: 'Limited / hard to find', discontinued: 'Discontinued' }[c.status];
+  const fixMail = `mailto:hello@mywrapcigars.com?subject=${encodeURIComponent('Correction: ' + name)}&body=${encodeURIComponent(`Cigar: ${name}\n\nWhat should be different?\n`)}`;
   $('#sheet-body').innerHTML = `
     <h2 style="margin:0">${esc(c.n)}</h2>
     <div class="card-sub">${esc(c.b)}${status ? ' · ' + status : ''}</div>
@@ -1100,17 +1090,8 @@ function openCigar(name) {
     <p class="muted" style="font-size:13px;margin:12px 0 0">
       ${c.checked ? 'Blend confirmed from published specs.' : 'Blend details are our best knowledge, not yet confirmed.'}
       Flavors and strength are general consensus.
+      <a href="${fixMail}" style="color:var(--accent)">Suggest a correction</a>
     </p>
-    <h3>Your review</h3>
-    <div class="btn-row" style="margin-top:0">
-      <button class="btn small ${r.status === 'ok' ? '' : 'ghost'}" data-act="ok">✓ Looks right</button>
-      <button class="btn small ${r.status === 'fix' ? '' : 'ghost'}" data-act="fix">Needs a fix</button>
-    </div>
-    <div style="display:${r.status === 'fix' ? 'block' : 'none'};margin-top:10px">
-      <textarea id="fix-note" placeholder="What's off? e.g. Strength should be Full, more cedar than cocoa">${esc(r.note || '')}</textarea>
-      <button class="btn small" data-act="save-fix" style="margin-top:8px">Save note</button>
-    </div>
-    ${r.status ? '<button class="btn small ghost" data-act="clear" style="margin-top:10px;border:none;padding-left:0">Clear my review</button>' : ''}
     <button class="btn block ghost" data-act="own" style="margin-top:16px">+ Add to humidor${invCount(c) ? ` (you have ${invCount(c)})` : ''}</button>
     <div class="btn-row">
       <button class="btn ghost" data-act="close">Close</button>
@@ -1122,53 +1103,12 @@ function openCigar(name) {
     if (act === 'close') return closeSheet();
     if (act === 'log') { closeSheet(); resetForm(c); show('add'); return; }
     if (act === 'own') return openInvForm(null, c);
-    if (act === 'ok') { reviews[name] = { status: 'ok', at: Date.now() }; toast('Marked as right'); }
-    if (act === 'fix') reviews[name] = { status: 'fix', note: r.note || '', at: Date.now() };
-    if (act === 'save-fix') { reviews[name] = { status: 'fix', note: $('#fix-note').value.trim(), at: Date.now() }; toast('Note saved'); }
-    if (act === 'clear') delete reviews[name];
-    saveReviews();
-    renderBrowse();
-    openCigar(name);
-    if (act === 'fix') $('#fix-note').focus();
   };
   $('#sheet').classList.add('open');
 }
 
-// ---------- Review summary (More page) ----------
-function reviewText() {
-  const ok = [], fix = [];
-  for (const [name, r] of Object.entries(reviews)) {
-    if (r.status === 'ok') ok.push(`- ${name}`);
-    if (r.status === 'fix') fix.push(`- ${name}${r.note ? ': ' + r.note : ''}`);
-  }
-  return [`MyWrap vault review (${today()})`,
-    fix.length ? '\nNeeds a fix:\n' + fix.join('\n') : '',
-    ok.length ? '\nLooks right:\n' + ok.join('\n') : ''].join('\n').trim();
-}
-function renderReviewSummary() {
-  const vals = Object.values(reviews);
-  const ok = vals.filter(r => r.status === 'ok').length;
-  const fix = vals.filter(r => r.status === 'fix').length;
-  $('#review-summary').textContent = ok || fix
-    ? `You've marked ${ok} as right and ${fix} as needing a fix. Copy them and paste into your chat with Claude to update the vault.`
-    : 'Open any cigar in Browse and mark it "Looks right" or "Needs a fix". Your reviews collect here.';
-  $('#copy-review').style.display = ok || fix ? '' : 'none';
-}
-$('#copy-review').addEventListener('click', async () => {
-  const text = reviewText();
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    // Older browsers: copy through a temporary text box
-    const t = document.createElement('textarea');
-    t.value = text;
-    document.body.appendChild(t);
-    t.select();
-    document.execCommand('copy');
-    t.remove();
-  }
-  toast('Copied. Paste it to Claude');
-});
+// Already opened from the home screen? Then the "add to home screen" tip isn't needed
+if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) $('#home-screen-tip').hidden = true;
 
 // ---------- Humidor inventory ----------
 const INV_KEY = 'humidor.inventory.v1';
@@ -1203,7 +1143,6 @@ function renderHumidor() {
   if (!inventory.length) {
     $('#h-list').innerHTML = `
       <div class="empty card">
-        <div class="big">🗄️</div>
         <h2>Your humidor is empty</h2>
         <p class="muted">Add the cigars you own. You can also tap any cigar in Browse and choose "Add to humidor".</p>
       </div>`;
@@ -1401,7 +1340,6 @@ const TRACKS = [
   { id: 'perfect', name: 'Perfect smokes', desc: '5 for both draw and burn', steps: [1, 5, 10], list: () => logs.filter(isPerfect) },
   { id: 'pairing', name: 'Pairings logged', steps: [10, 25, 50], list: () => logs.filter(l => l.pairing) },
   { id: 'humidor', name: 'Humidor', desc: 'Most cigars held at once', steps: [10, 25, 50, 100], value: () => Math.max(humidorPeak, invTotal()) },
-  { id: 'reviews', name: 'Vault reviews', steps: [10, 50, 100], value: () => Object.keys(reviews).length },
 ];
 const trackValue = t => t.value ? t.value() : t.list ? t.list().length : t.groups().length;
 

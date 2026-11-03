@@ -214,7 +214,7 @@ function refreshCurrentView() {
   if (active === 'journal') renderJournal();
   if (active === 'recs') renderRecs();
   if (active === 'browse') renderBrowse();
-  if (active === 'more') { renderProfile(); renderReviewSummary(); }
+  if (active === 'more') renderProfile();
   if (active === 'friends' && typeof renderFriends === 'function') renderFriends();
 }
 
