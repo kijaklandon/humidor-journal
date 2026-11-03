@@ -407,6 +407,10 @@
       <div class="theme-grid" id="theme-picker"></div>
     </div>
     <div class="card">
+      <div class="card-title">Preferences</div>
+      <label class="toggle field" style="margin:10px 0 0"><input type="checkbox" id="pref-hide-cubans"> <span style="margin:0;color:var(--text)">Hide Cuban cigars <span class="muted" style="font-size:13px">· from Browse, For You and suggestions when logging</span></span></label>
+    </div>
+    <div class="card">
       <div class="card-title">Your data</div>
       <p class="muted" style="margin:6px 0 12px">Your journal is saved on this device. Make a backup now and then so you never lose it.</p>
       <div class="btn-row">
@@ -530,7 +534,6 @@ let formNotes = new Set();
 
 $('#f-wrapper').innerHTML = WRAPPERS.map(w => `<option>${w}</option>`).join('');
 $('#f-origin').innerHTML = ORIGINS.map(o => `<option>${o}</option>`).join('');
-$('#catalog-list').innerHTML = CATALOG.map(c => `<option value="${esc(fullName(c))}">`).join('');
 
 function renderRatingInput() {
   $('#f-rating').innerHTML = [1, 2, 3, 4, 5].map(i =>
@@ -931,7 +934,7 @@ function scoreCigar(c, p) {
 
 function renderRecs() {
   const smoked = smokedSet();
-  const untried = CATALOG.filter(c => !isSmoked(c, smoked));
+  const untried = visibleCatalog().filter(c => !isSmoked(c, smoked));
 
   if (!logs.length) {
     const starters = untried.filter(c => c.s <= 3).slice(0, 5);
@@ -1040,12 +1043,13 @@ function renderBrowse() {
   const q = $('#b-search').value.trim().toLowerCase();
   const w = $('#b-wrapper').value, s = +$('#b-strength').value, o = $('#b-origin').value;
   const smoked = smokedSet();
-  const list = CATALOG
+  const vault = visibleCatalog();
+  const list = vault
     .filter(c => (!w || c.w === w) && (!s || c.s === s) && (!o || c.o === o) &&
       (!q || [c.b, c.n, c.fac, c.w, c.o, c.notes.join(' ')].join(' ').toLowerCase().includes(q)))
     .sort((a, b) => a.b.localeCompare(b.b) || a.n.localeCompare(b.n));
 
-  $('#b-count').textContent = `${list.length} of ${CATALOG.length} cigars`;
+  $('#b-count').textContent = `${list.length} of ${vault.length} cigars${vault.length < CATALOG.length ? ' · Cubans hidden' : ''}`;
   $('#b-reset').style.visibility = (q || w || s || o) ? 'visible' : 'hidden';
 
   let html = '', brand = null;
@@ -1736,6 +1740,42 @@ $('#theme-picker').addEventListener('click', e => {
 lightQuery.addEventListener('change', () => { if (savedTheme() === 'auto') paintTheme(); });
 paintTheme();
 renderThemePicker();
+
+// ---------- Preferences ----------
+// Saved per device as { name: { v: value, at: when it was set } }; sync keeps the newest
+const PREFS_KEY = 'mywrap.prefs.v1';
+let prefs = (() => {
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch { return {}; }
+})();
+const getPref = k => prefs[k]?.v;
+function setPrefs(next, fromSync) {
+  prefs = next;
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
+  applyPrefs();
+  if (!fromSync) changed();
+}
+function setPref(k, v) {
+  setPrefs({ ...prefs, [k]: { v, at: Date.now() } });
+}
+
+// The vault as this person wants to see it
+const visibleCatalog = () => getPref('hideCubans') ? CATALOG.filter(c => c.o !== 'Cuba') : CATALOG;
+
+function applyPrefs() {
+  const hide = !!getPref('hideCubans');
+  $('#pref-hide-cubans').checked = hide;
+  $('#catalog-list').innerHTML = visibleCatalog().map(c => `<option value="${esc(fullName(c))}">`).join('');
+  const o = $('#b-origin').value;
+  $('#b-origin').innerHTML = '<option value="">Country</option>' + ORIGINS.filter(x => !(hide && x === 'Cuba')).map(x => `<option>${x}</option>`).join('');
+  $('#b-origin').value = hide && o === 'Cuba' ? '' : o;
+  if ($('#view-browse').classList.contains('active')) renderBrowse();
+  if ($('#view-recs').classList.contains('active')) renderRecs();
+}
+$('#pref-hide-cubans').addEventListener('change', e => {
+  setPref('hideCubans', e.target.checked);
+  toast(e.target.checked ? 'Cuban cigars hidden' : 'Cuban cigars shown');
+});
+applyPrefs();
 
 // ---------- Backup & reset ----------
 $('#export-btn').addEventListener('click', () => {

@@ -137,12 +137,23 @@ async function syncNow() {
     }
     // Color theme: the most recent pick on any device wins
     // (skipped until supabase/add-settings.sql has added the settings column)
-    let remoteTheme = null;
+    let remoteTheme = null, remotePrefs = null;
     if ('settings' in st) {
       const set = st.settings || {};
       const localAt = themeAt(), remoteAt = Number(set.themeAt) || 0;
       if (remoteAt > localAt && set.theme) remoteTheme = set;
       else if (localAt > remoteAt) statePatch.settings = { ...set, theme: savedTheme(), themeAt: localAt };
+
+      // Other preferences (e.g. hide Cubans): newest change of each one wins
+      const rp = set.prefs || {}, merged = { ...prefs };
+      let pull = false, push = false;
+      for (const k of new Set([...Object.keys(prefs), ...Object.keys(rp)])) {
+        const lAt = prefs[k]?.at || 0, rAt = rp[k]?.at || 0;
+        if (rAt > lAt) { merged[k] = rp[k]; pull = true; }
+        else if (lAt > rAt) push = true;
+      }
+      if (pull) remotePrefs = merged;
+      if (push) statePatch.settings = { ...(statePatch.settings || set), prefs: merged };
     }
     if (Object.keys(statePatch).length) {
       const { error } = await sb.from('user_state').update(statePatch).eq('user_id', uid);
@@ -166,6 +177,7 @@ async function syncNow() {
       localStorage.setItem(PEAK_KEY, humidorPeak);
     } catch {}
     if (remoteTheme) setTheme(remoteTheme.theme, remoteTheme.themeAt);
+    if (remotePrefs) setPrefs(remotePrefs, true);
     applyingRemote = false;
 
     saveBase({
