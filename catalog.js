@@ -1272,4 +1272,17 @@ const CATALOG = [
   { b: 'Trinidad', n: 'Espíritu Series No. 2', w: 'Other', bi: 'Nicaragua', f: 'Brazil, Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Earth', 'Sweet', 'Spice', 'Cocoa'] },
   { b: 'Trinidad', n: 'Espíritu Series No. 3', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
   { b: 'Drew Estate', n: 'Herrera Estelí Miami', w: 'Habano', bi: 'Ecuador (Sumatra)', f: 'Dominican Republic, Nicaragua', o: 'USA', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Cocoa'] },
+
+  // ===== Expansion batch 20 (Nov 2026): H. Upmann, Romeo y Julieta, Aganorsa, Leccia, Villiger. From trade press, not yet confirmed. =====
+  { b: 'H. Upmann', n: 'Sun Grown', w: 'Habano', bi: 'Connecticut Broadleaf', f: 'Honduras, Nicaragua', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Earth', 'Sweet'] },
+  { b: 'Romeo y Julieta', n: 'Reserva Real Nicaragua Profundo', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Earth', 'Cocoa', 'Spice', 'Cedar'] },
+  { b: 'Aganorsa Leaf', n: 'Aniversario Maduro', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 5, notes: ['Cocoa', 'Coffee', 'Earth', 'Pepper'] },
+  { b: 'Aganorsa Leaf', n: 'Aniversario Corojo', w: 'Corojo', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Spice', 'Pepper', 'Leather', 'Cedar'] },
+  { b: 'Aganorsa Leaf', n: 'JFR Maduro', w: 'Maduro', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
+  { b: 'Leccia', n: 'White', w: 'Cameroon', bi: 'Ecuador', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cedar', 'Spice', 'Sweet', 'Earth'] },
+  { b: 'Leccia', n: 'Black', w: 'Habano', bi: 'Nicaragua (Rosado)', f: 'Dominican Republic, Nicaragua, Brazil', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Wood', 'Leather', 'Earth'] },
+  { b: 'Leccia', n: 'Luchador', w: 'San Andrés', bi: 'Ecuador (Habano)', f: 'USA (Pennsylvania), Honduras, Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Earth', 'Pepper', 'Spice'] },
+  { b: 'Villiger', n: '1888', w: 'Other', bi: 'Mexico', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Cream', 'Nuts'] },
+  { b: 'Villiger', n: '1888 Nicaragua', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua, USA (Pennsylvania)', o: 'Nicaragua', s: 3, notes: ['Earth', 'Cedar', 'Spice', 'Sweet'] },
+  { b: 'Villiger', n: 'La Libertad', w: 'Connecticut', bi: 'Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Spice'] },
 ];
