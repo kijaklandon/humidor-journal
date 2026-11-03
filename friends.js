@@ -34,7 +34,7 @@ async function loadFriends() {
   const ids = [...new Set(rows.map(r => r.follower === uid ? r.following : r.follower))];
   let people = {};
   if (ids.length) {
-    const { data, error: e2 } = await sb.from('profiles').select('id,name,friend_code,location').in('id', ids);
+    const { data, error: e2 } = await sb.from('profiles').select('id,name,friend_code').in('id', ids);
     if (e2) throw e2;
     people = Object.fromEntries(data.map(p => [p.id, p]));
   }
@@ -155,7 +155,7 @@ function personRow(p, action, label) {
       <span data-person="${p.id}" style="cursor:pointer">${personAvatar(p)}</span>
       <div class="grow" data-person="${p.id}" style="cursor:pointer">
         <div class="ach-title">${esc(personName(p))}</div>
-        <div class="ach-desc">${esc([p.location, p.name ? p.friend_code : ''].filter(Boolean).join(' · '))}</div>
+        ${p.name ? `<div class="ach-desc">${esc(p.friend_code || '')}</div>` : ''}
       </div>
       <button class="btn small ghost" data-act="${action}" data-id="${p.id}" data-name="${esc(personName(p))}">${label}</button>
     </div>`;
@@ -289,7 +289,6 @@ async function openFriendProfile(id) {
   });
 
   const following = friendsCache?.following.some(f => f.id === id);
-  const sub = [p.location, p.since ? `Smoking since ${p.since}` : ''].filter(Boolean).join(' · ');
   const favs = [
     p.fav_cigar && `Favorite: ${p.fav_cigar}`,
     p.pairing && `Pairs with: ${p.pairing}`,
@@ -303,7 +302,7 @@ async function openFriendProfile(id) {
       ${personAvatar(p, 56)}
       <div style="flex:1;min-width:0">
         <div class="card-title" style="font-size:20px">${esc(personName(p))}</div>
-        <div class="card-sub">${esc(sub || p.friend_code || '')}</div>
+        <div class="card-sub">${esc(p.friend_code || '')}</div>
       </div>
     </div>
     ${p.bio ? `<p style="margin:12px 0 0">${esc(p.bio)}</p>` : ''}

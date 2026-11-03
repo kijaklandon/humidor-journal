@@ -1309,6 +1309,12 @@ function saveProfile() {
   catch { toast('Could not save on this device'); }
   changed();
 }
+// Location and "smoking since" were removed from profiles; drop any saved ones
+if ('location' in profile || 'since' in profile) {
+  delete profile.location;
+  delete profile.since;
+  saveProfile();
+}
 
 // ---------- Achievements ----------
 // Progress is worked out from your data each time; `earned` remembers when each
@@ -1511,7 +1517,6 @@ let showAllEarned = false;
 let showAllBadges = false;
 function renderProfile() {
   const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
-  const sub = [profile.location, profile.since ? `Smoking since ${profile.since}` : ''].filter(Boolean).join(' · ');
   const favs = [
     profile.favCigar && `Favorite: ${profile.favCigar}`,
     profile.pairing && `Pairs with: ${profile.pairing}`,
@@ -1533,7 +1538,7 @@ function renderProfile() {
         <div class="avatar">${initials ? esc(initials) : '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>'}</div>
         <div style="flex:1;min-width:0">
           <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
-          <div class="card-sub">${esc(sub) || 'Tap Edit profile to add your details'}</div>
+          ${profile.name ? '' : '<div class="card-sub">Tap Edit profile to add your details</div>'}
         </div>
       </div>
       ${profile.bio ? `<p style="margin:12px 0 0">${esc(profile.bio)}</p>` : ''}
@@ -1607,10 +1612,6 @@ function openProfileForm() {
   $('#sheet-body').innerHTML = `
     <h2 style="margin:0 0 12px">Edit profile</h2>
     <label class="field"><span>Name</span><input type="text" id="p-name" maxlength="40" value="${esc(p.name || '')}"></label>
-    <div class="two">
-      <label class="field"><span>Location</span><input type="text" id="p-location" maxlength="40" placeholder="e.g. Tampa, FL" value="${esc(p.location || '')}"></label>
-      <label class="field"><span>Smoking since</span><input type="number" id="p-since" inputmode="numeric" min="1940" max="${new Date().getFullYear()}" placeholder="Year" value="${p.since || ''}"></label>
-    </div>
     <label class="field"><span>Favorite cigar</span><input type="text" id="p-fav" list="catalog-list" placeholder="Start typing…" value="${esc(p.favCigar || '')}"></label>
     <label class="field"><span>Favorite pairing</span><input type="text" id="p-pairing" maxlength="40" placeholder="e.g. Bourbon, espresso" value="${esc(p.pairing || '')}"></label>
     <div class="two">
@@ -1618,7 +1619,7 @@ function openProfileForm() {
       <label class="field"><span>Favorite wrapper</span><select id="p-wrapper"><option value="">No preference</option>${WRAPPERS.filter(w => w !== 'Other').map(w => `<option ${p.wrapper === w ? 'selected' : ''}>${w}</option>`).join('')}</select></label>
     </div>
     <label class="field"><span>About you</span><textarea id="p-bio" maxlength="200" placeholder="A line or two about how you enjoy cigars">${esc(p.bio || '')}</textarea></label>
-    <p class="muted" style="font-size:13px;margin:0 0 12px">Your profile is saved on this device only.</p>
+    <p class="muted" style="font-size:13px;margin:0 0 12px">Friends who follow you can see your profile.</p>
     <div class="btn-row">
       <button class="btn ghost" data-act="close">Cancel</button>
       <button class="btn" data-act="save">Save</button>
@@ -1627,11 +1628,8 @@ function openProfileForm() {
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'close') return closeSheet();
     if (act !== 'save') return;
-    const year = Math.round(+$('#p-since').value);
     profile = {
       name: $('#p-name').value.trim(),
-      location: $('#p-location').value.trim(),
-      since: year >= 1940 && year <= new Date().getFullYear() ? year : null,
       favCigar: $('#p-fav').value.trim(),
       pairing: $('#p-pairing').value.trim(),
       strength: +$('#p-strength').value || null,

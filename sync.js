@@ -67,8 +67,12 @@ function mergeList(local, remoteRows, base) {
   return { merged, upserts, tombstones };
 }
 
-const PROFILE_COLS = { name: 'name', location: 'location', since: 'since', favCigar: 'fav_cigar', pairing: 'pairing', strength: 'strength', wrapper: 'wrapper', bio: 'bio', featured: 'featured' };
-const profileToRow = p => Object.fromEntries(Object.entries(PROFILE_COLS).map(([k, col]) => [col, k === 'featured' ? (p[k] || []) : (p[k] ?? null)]));
+const PROFILE_COLS = { name: 'name', favCigar: 'fav_cigar', pairing: 'pairing', strength: 'strength', wrapper: 'wrapper', bio: 'bio', featured: 'featured' };
+// location and since are no longer asked for; always clear them
+const profileToRow = p => ({
+  ...Object.fromEntries(Object.entries(PROFILE_COLS).map(([k, col]) => [col, k === 'featured' ? (p[k] || []) : (p[k] ?? null)])),
+  location: null, since: null,
+});
 const rowToProfile = row => {
   const p = {};
   for (const [k, col] of Object.entries(PROFILE_COLS)) {
