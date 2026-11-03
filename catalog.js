@@ -1199,4 +1199,20 @@ const CATALOG = [
   { b: 'Asylum', n: 'Straight Jacket', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Pepper', 'Earth', 'Leather', 'Cocoa'] },
   { b: 'Asylum', n: 'Nyctophilia', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
   { b: 'Asylum', n: 'Schizo', w: 'Other', o: 'Honduras', s: 2, notes: ['Cedar', 'Earth', 'Sweet', 'Spice'] },
+
+  // ===== Expansion batch 16 (Nov 2026): Cubariqueño, Aladino, Dapper, Nub. From trade press, not yet confirmed. =====
+  { b: 'Cubariqueño', n: 'Protocol', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'] },
+  { b: 'Cubariqueño', n: 'Protocol Themis', w: 'Connecticut', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Spice'] },
+  { b: 'Cubariqueño', n: 'Protocol Probable Cause', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
+  { b: 'Aladino', n: 'Maduro', w: 'San Andrés', bi: 'Honduras (Corojo)', f: 'Honduras (Corojo)', o: 'Honduras', fac: 'JRE Tobacco', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
+  { b: 'Aladino', n: 'Candela', w: 'Candela', bi: 'Honduras', f: 'Honduras (Corojo)', o: 'Honduras', fac: 'JRE Tobacco', s: 1, notes: ['Wood', 'Sweet', 'Cream', 'Floral'] },
+  { b: 'Aladino', n: 'Vintage Selection', w: 'Habano', bi: 'Honduras (Corojo)', f: 'Honduras (Corojo)', o: 'Honduras', fac: 'JRE Tobacco', s: 3, notes: ['Spice', 'Cedar', 'Earth', 'Sweet'] },
+  { b: 'Dapper', n: 'El Borracho', w: 'San Andrés', bi: 'Nicaragua', f: 'Nicaragua (Estelí, Condega, Jalapa)', o: 'Nicaragua', s: 3, notes: ['Cocoa', 'Earth', 'Spice', 'Sweet'] },
+  { b: 'Dapper', n: 'El Borracho Maduro', w: 'Broadleaf', f: 'Nicaragua (Estelí, Condega, Jalapa)', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Pepper'] },
+  { b: 'Dapper', n: 'La Madrina', w: 'Habano', bi: 'Mexico (San Andrés)', f: 'Dominican Republic, Nicaragua, USA', o: 'Nicaragua', s: 4, notes: ['Spice', 'Cocoa', 'Leather', 'Earth'] },
+  { b: 'Dapper', n: 'Desvalido', w: 'Rosado', bi: 'USA', f: 'Nicaragua, USA', o: 'Nicaragua', s: 5, notes: ['Spice', 'Pepper', 'Leather', 'Earth'] },
+  { b: 'Nub', n: 'Dub', w: 'Maduro', bi: 'Brazil (Maduro)', f: 'Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
+  { b: 'Nub', n: 'Nuance Single Roast', w: 'Connecticut', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 1, notes: ['Coffee', 'Cream', 'Sweet', 'Nuts'] },
+  { b: 'Nub', n: 'Nuance Double Roast', w: 'Other', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 2, notes: ['Coffee', 'Sweet', 'Cream', 'Cocoa'] },
+  { b: 'Nub', n: 'Nuance Triple Roast', w: 'Other', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 2, notes: ['Coffee', 'Cocoa', 'Sweet', 'Earth'] },
 ];
