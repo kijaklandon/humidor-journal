@@ -1215,4 +1215,17 @@ const CATALOG = [
   { b: 'Nub', n: 'Nuance Single Roast', w: 'Connecticut', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 1, notes: ['Coffee', 'Cream', 'Sweet', 'Nuts'] },
   { b: 'Nub', n: 'Nuance Double Roast', w: 'Other', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 2, notes: ['Coffee', 'Sweet', 'Cream', 'Cocoa'] },
   { b: 'Nub', n: 'Nuance Triple Roast', w: 'Other', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', fac: 'Oliva', s: 2, notes: ['Coffee', 'Cocoa', 'Sweet', 'Earth'] },
+
+  // ===== Expansion batch 17 (Nov 2026): 5 Vegas, Man O' War, Diesel, Kafie 1901. From trade press and retailers, not yet confirmed. =====
+  { b: '5 Vegas', n: 'Gold', w: 'Connecticut', bi: 'Honduras', o: 'Nicaragua', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
+  { b: '5 Vegas', n: 'Classic', w: 'Sumatra', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Nicaragua', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
+  { b: '5 Vegas', n: 'Series A', w: 'Maduro', bi: 'Nicaragua', f: 'Dominican Republic, Honduras, Nicaragua', o: 'Nicaragua', s: 4, notes: ['Cocoa', 'Coffee', 'Earth', 'Sweet'] },
+  { b: '5 Vegas', n: 'Triple-A', w: 'Broadleaf', bi: 'Nicaragua', f: 'Nicaragua (ligero)', o: 'Nicaragua', s: 5, notes: ['Cocoa', 'Earth', 'Pepper', 'Leather'] },
+  { b: "Man O' War", n: 'Ruination', w: 'Habano', bi: 'Nicaragua', f: 'Nicaragua, Honduras (ligero)', o: 'Nicaragua', fac: 'AJ Fernandez', s: 5, notes: ['Pepper', 'Earth', 'Leather', 'Cocoa'] },
+  { b: "Man O' War", n: 'Puro Auténtico', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Pepper', 'Earth', 'Spice', 'Leather'] },
+  { b: 'Diesel', n: 'Delirium', w: 'Sumatra', bi: 'Connecticut Broadleaf', f: 'Nicaragua (incl. Ometepe, ligero)', o: 'Nicaragua', fac: 'AJ Fernandez', s: 5, notes: ['Pepper', 'Earth', 'Cocoa', 'Leather'], status: 'limited' },
+  { b: 'Diesel', n: 'Hair of the Dog', w: 'Habano', bi: 'Ecuador (Sumatra)', f: 'Nicaragua (Habano)', o: 'Nicaragua', fac: 'AJ Fernandez', s: 3, notes: ['Spice', 'Cedar', 'Sweet', 'Leather'], status: 'limited' },
+  { b: 'Kafie 1901', n: 'Don Fernando Maduro', w: 'Maduro', bi: 'Cameroon', f: 'Dominican Republic, USA (Pennsylvania), Nicaragua', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
+  { b: 'Kafie 1901', n: 'Sumatra', w: 'Sumatra', bi: 'Dominican Republic', f: 'Dominican Republic, Nicaragua, Peru', o: 'Dominican Republic', fac: 'La Aurora', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'] },
+  { b: 'Kafie 1901', n: 'Connecticut', w: 'Connecticut', bi: 'Honduras', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', fac: 'La Aurora', s: 1, notes: ['Cream', 'Cedar', 'Nuts', 'Honey'] },
 ];
