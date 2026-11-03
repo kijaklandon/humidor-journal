@@ -795,7 +795,7 @@ function renderSmoked() {
     .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.enjoyed, l.pairing, (l.notes || []).join(' '), (l.detail?.thirds || []).map(t => t.text).join(' ')].join(' ').toLowerCase().includes(q))
     .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
 
-  $('#journal-list').innerHTML = list.length ? list.map(l => `
+  $('#journal-list').innerHTML = backupNudgeHtml() + (list.length ? list.map(l => `
     <div class="card tap" data-id="${l.id}">
       <div style="display:flex;gap:12px">
         ${photoImg(l, null, 'thumb')}
@@ -809,10 +809,34 @@ function renderSmoked() {
         </div>
       </div>
       ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
-    </div>`).join('') : '<p class="muted">No cigars match that search.</p>';
+    </div>`).join('') : '<p class="muted">No cigars match that search.</p>');
+}
+
+// Signed out with cigars logged? Remind them it's only on this phone.
+// Waits until sign-in has been checked (authReady, from sync.js) so signed-in users never see it flash.
+const NUDGE_KEY = 'mywrap.backupNudgeHidden';
+function backupNudgeHtml() {
+  if (typeof authReady === 'undefined' || !authReady || account || !sb || !logs.length) return '';
+  try { if (Date.now() < Number(localStorage.getItem(NUDGE_KEY))) return ''; } catch {}
+  return `
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card-title">Your journal is only on this phone</div>
+      <p class="muted" style="font-size:14px;margin:4px 0 12px">Sign in to back it up, see it on your other devices and share with friends.</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn small ghost" data-nudge="later">Not now</button>
+        <button class="btn small" data-nudge="signin">Sign in</button>
+      </div>
+    </div>`;
 }
 
 $('#journal-list').addEventListener('click', e => {
+  const nudge = e.target.closest('[data-nudge]')?.dataset.nudge;
+  if (nudge === 'signin') return openAuthForm('signin');
+  if (nudge === 'later') {
+    // Ask again in 3 days
+    try { localStorage.setItem(NUDGE_KEY, Date.now() + 3 * 24 * 3600 * 1000); } catch {}
+    return renderJournal();
+  }
   const card = e.target.closest('[data-id]');
   if (card) openDetail(card.dataset.id);
 });

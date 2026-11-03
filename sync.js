@@ -14,6 +14,7 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 let account = null;           // { id, email, friendCode }
+let authReady = false;        // true once we know whether this device is signed in
 let syncing = false, syncAgain = false, syncTimer = null;
 let lastSynced = null, syncError = null;
 
@@ -210,6 +211,7 @@ function refreshCurrentView() {
 async function setAccount(session) {
   const user = session?.user;
   const changed = account?.id !== user?.id;
+  authReady = true;
   if (changed && typeof friendsCache !== 'undefined') friendsCache = null;
   if (!user) { account = null; renderAccount(); refreshCurrentView(); return; }
   account = { id: user.id, email: user.email, friendCode: account?.friendCode };
