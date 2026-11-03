@@ -225,6 +225,7 @@ function openAuthForm(mode = 'signin') {
     </div>
     <label class="field"><span>Email</span><input type="email" id="a-email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>
     <label class="field"><span>Password</span><input type="password" id="a-pass" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${signup ? 'At least 8 characters' : ''}"></label>
+    ${signup ? '' : `<button type="button" class="link-btn" data-act="forgot" style="background:none;border:none;padding:0;margin:-4px 0 12px;font:inherit;font-size:13px;color:var(--accent);cursor:pointer">Forgot password?</button>`}
     ${signup ? `
       <label class="toggle field"><input type="checkbox" id="a-age"> <span style="margin:0;color:var(--text)">I'm 21 or older</span></label>
       <p class="muted" style="font-size:13px;margin:0 0 12px">Your journal stays on this phone and is backed up to your account. Followers only see what you share. <a href="privacy.html" target="_blank" style="color:var(--accent)">Privacy policy</a></p>` : ''}
@@ -237,6 +238,7 @@ function openAuthForm(mode = 'signin') {
     if (m) return openAuthForm(m.dataset.mode);
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'close') return closeSheet();
+    if (act === 'forgot') return openForgotForm($('#a-email').value.trim());
     if (act !== 'go') return;
     const email = $('#a-email').value.trim();
     const password = $('#a-pass').value;
@@ -247,7 +249,7 @@ function openAuthForm(mode = 'signin') {
     btn.disabled = true;
     btn.textContent = signup ? 'Creating…' : 'Signing in…';
     const { data, error } = signup
-      ? await sb.auth.signUp({ email, password })
+      ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: APP_HOME } })
       : await sb.auth.signInWithPassword({ email, password });
     if (error) {
       btn.disabled = false;
@@ -255,7 +257,8 @@ function openAuthForm(mode = 'signin') {
       return toast(friendlyAuthError(error));
     }
     if (signup) { try { localStorage.setItem('humidor.age21', '1'); } catch {} }
-    if (!data.session) { closeSheet(); return toast('Check your email to confirm your account'); }
+    if (!data.session) return showAuthMessage('Check your email',
+      `We sent a link to <b>${esc(email)}</b>. Tap it to finish creating your account, then come back and sign in. If you don't see it in a minute, check your spam folder.`);
     closeSheet();
     toast(signup ? 'Account created. Backing up your journal…' : 'Signed in. Syncing…');
   };
@@ -263,11 +266,82 @@ function openAuthForm(mode = 'signin') {
   setTimeout(() => $('#a-email')?.focus(), 50);
 }
 
+// Where emailed links (confirm account, reset password) send people back to
+const APP_HOME = location.origin + location.pathname;
+
+function showAuthMessage(title, html) {
+  $('#sheet-body').innerHTML = `
+    <div class="card-title" style="font-size:18px;margin:0 0 8px">${title}</div>
+    <p class="muted" style="margin:0 0 16px">${html}</p>
+    <div class="btn-row"><button class="btn" data-act="close">OK</button></div>`;
+  $('#sheet-body').onclick = e => { if (e.target.closest('[data-act="close"]')) closeSheet(); };
+  $('#sheet').classList.add('open');
+}
+
+function openForgotForm(prefill = '') {
+  $('#sheet-body').innerHTML = `
+    <div class="card-title" style="font-size:18px;margin:0 0 8px">Reset your password</div>
+    <p class="muted" style="font-size:13px;margin:0 0 12px">Enter your account email and we'll send you a link to choose a new password.</p>
+    <label class="field"><span>Email</span><input type="email" id="f-email" autocomplete="email" inputmode="email" placeholder="you@example.com" value="${esc(prefill)}"></label>
+    <div class="btn-row">
+      <button class="btn ghost" data-act="back">Back</button>
+      <button class="btn" data-act="send">Send link</button>
+    </div>`;
+  $('#sheet-body').onclick = async e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'back') return openAuthForm('signin');
+    if (act !== 'send') return;
+    const email = $('#f-email').value.trim();
+    if (!email) return toast('Enter your email');
+    const btn = e.target.closest('[data-act]');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: APP_HOME });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Send link';
+      return toast(friendlyAuthError(error));
+    }
+    showAuthMessage('Check your email',
+      `If <b>${esc(email)}</b> has a MyWrap account, a reset link is on its way. Open it on this device to choose a new password. Check your spam folder if it doesn't show up.`);
+  };
+  $('#sheet').classList.add('open');
+  setTimeout(() => $('#f-email')?.focus(), 50);
+}
+
+// Opened from the reset email: the link signs you in, then you pick a new password
+function openNewPasswordForm() {
+  $('#sheet-body').innerHTML = `
+    <div class="card-title" style="font-size:18px;margin:0 0 8px">Choose a new password</div>
+    <label class="field"><span>New password</span><input type="password" id="n-pass" autocomplete="new-password" placeholder="At least 8 characters"></label>
+    <div class="btn-row"><button class="btn" data-act="save">Save password</button></div>`;
+  $('#sheet-body').onclick = async e => {
+    if (!e.target.closest('[data-act="save"]')) return;
+    const password = $('#n-pass').value;
+    if (password.length < 8) return toast('Use at least 8 characters');
+    const btn = e.target.closest('[data-act]');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Save password';
+      return toast(friendlyAuthError(error));
+    }
+    closeSheet();
+    toast('Password updated. You\'re signed in');
+  };
+  $('#sheet').classList.add('open');
+  setTimeout(() => $('#n-pass')?.focus(), 50);
+}
+
 function friendlyAuthError(error) {
   const m = (error.message || '').toLowerCase();
   if (m.includes('invalid login')) return 'Wrong email or password';
   if (m.includes('already registered')) return 'That email already has an account. Try Sign in';
   if (m.includes('rate limit')) return 'Too many tries. Wait a minute and try again';
+  if (m.includes('not confirmed')) return 'Confirm your email first. Tap the link we sent you (check spam too)';
+  if (m.includes('same') && m.includes('password')) return 'Pick a password different from your old one';
   if (m.includes('fetch') || m.includes('network')) return "Can't reach the server. Check your connection";
   return error.message;
 }
@@ -363,7 +437,10 @@ if ($('#account')) {
 
 // ---------- Start ----------
 if (sb) {
-  sb.auth.onAuthStateChange((_event, session) => setAccount(session));
+  sb.auth.onAuthStateChange((event, session) => {
+    setAccount(session);
+    if (event === 'PASSWORD_RECOVERY') setTimeout(openNewPasswordForm, 0);
+  });
   sb.auth.getSession().then(({ data }) => setAccount(data.session));
   // Catch up when the app comes back to the foreground or back online
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleSync(); });
