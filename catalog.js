@@ -1070,4 +1070,10 @@ const CATALOG = [
   { b: 'La Gloria Cubana', n: 'Gran Legado', w: 'Broadleaf', bi: 'Nicaragua', f: 'Nicaragua, Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Sweet', 'Earth', 'Leather'], checked: true },
   { b: 'La Gloria Cubana', n: 'Los Gloriosos', w: 'Habano', bi: 'Nicaragua (Jalapa, Estelí)', f: 'Nicaragua, Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'], checked: true },
   { b: 'La Gloria Cubana', n: 'Intención', w: 'San Andrés', bi: 'Indonesia', f: 'Nicaragua, Honduras', o: 'Dominican Republic', s: 4, notes: ['Cocoa', 'Earth', 'Pepper', 'Sweet'], checked: true },
+
+  // ===== Expansion batch 8 (Nov 2026): Romeo y Julieta and Arturo Fuente, from the makers' own sites. =====
+  { b: 'Romeo y Julieta', n: '150th Anniversary', w: 'Sumatra', bi: 'Mexico (San Andrés)', f: 'Peru, Honduras, Dominican Republic', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Earth', 'Sweet'], status: 'limited', checked: true },
+  { b: 'Romeo y Julieta', n: 'Reserva Real Nicaragua Midnight Twist', w: 'Other', bi: 'Nicaragua', f: 'Nicaragua', o: 'Nicaragua', fac: 'AJ Fernandez', s: 4, notes: ['Cedar', 'Spice', 'Nuts', 'Earth'], checked: true },
+  { b: 'Arturo Fuente', n: 'OpusX Oro Oscuro', w: 'Rosado', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Tabacalera A. Fuente', s: 5, notes: ['Spice', 'Leather', 'Cocoa', 'Cedar'], status: 'limited', checked: true },
+  { b: 'Arturo Fuente', n: 'OpusX Forbidden X', w: 'Rosado', bi: 'Dominican Republic', f: 'Dominican Republic', o: 'Dominican Republic', fac: 'Tabacalera A. Fuente', s: 5, notes: ['Spice', 'Leather', 'Cedar', 'Pepper'], status: 'limited', checked: true },
 ];
