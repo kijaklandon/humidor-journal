@@ -62,6 +62,11 @@
   }
   header.top h1 { margin: 0; font-size: 20px; letter-spacing: .3px; font-family: Georgia, "Times New Roman", serif; }
   header.top h1 span { color: var(--accent); }
+  header.top { display: flex; align-items: center; justify-content: space-between; }
+  .icon-btn { background: none; border: none; padding: 4px; margin: -4px; color: var(--muted); cursor: pointer; display: inline-flex; }
+  .icon-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn:hover, .icon-btn:active { color: var(--accent); }
+  .back-btn { background: none; border: none; padding: 0; margin: 0 0 12px; font: inherit; font-size: 15px; color: var(--accent); cursor: pointer; }
   main { max-width: 640px; margin: 0 auto; padding: 16px; }
   .view { display: none; }
   .view.active { display: block; }
@@ -287,7 +292,12 @@
 </head>
 <body>
 
-<header class="top"><h1>My<span>Wrap</span></h1></header>
+<header class="top">
+  <h1>My<span>Wrap</span></h1>
+  <button type="button" class="icon-btn" id="settings-btn" aria-label="Settings" hidden>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
 
 <main>
   <!-- JOURNAL -->
@@ -397,8 +407,16 @@
 
   <!-- MORE -->
   <section id="view-more" class="view">
-    <div id="account"></div>
     <div id="profile"></div>
+  </section>
+
+  <!-- SETTINGS (opened from the gear on Profile) -->
+  <section id="view-settings" class="view">
+    <button type="button" class="back-btn" id="settings-back">‹ Profile</button>
+    <h2 style="margin:0 0 4px">Settings</h2>
+    <h3>Account</h3>
+    <div id="account"></div>
+
     <h3>Look & feel</h3>
     <div class="card">
       <div class="card-title">Color theme</div>
@@ -509,7 +527,10 @@ function findCatalog(text) {
 // ---------- Navigation ----------
 function show(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  // Settings lives under the Profile tab
+  const tab = view === 'settings' ? 'more' : view;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === tab));
+  $('#settings-btn').hidden = view !== 'more';
   if (view === 'journal') renderJournal();
   if (view === 'recs') renderRecs();
   if (view === 'browse') renderBrowse();
@@ -521,6 +542,8 @@ document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('cl
   if (b.dataset.view === 'add') resetForm();
   show(b.dataset.view);
 }));
+$('#settings-btn').addEventListener('click', () => show('settings'));
+$('#settings-back').addEventListener('click', () => show('more'));
 
 // ---------- Form ----------
 let formRating = 0;
