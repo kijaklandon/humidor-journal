@@ -1171,4 +1171,15 @@ const CATALOG = [
   { b: 'Gispert', n: 'Natural', w: 'Connecticut', f: 'Honduras, Nicaragua', o: 'Dominican Republic', s: 1, notes: ['Cream', 'Cedar', 'Nuts', 'Toast'] },
   { b: 'Gispert', n: 'Maduro', w: 'San Andrés', f: 'Honduras, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
   { b: 'Garcia y Vega', n: 'Original', w: 'Other', o: 'Dominican Republic', s: 1, notes: ['Sweet', 'Toast', 'Wood', 'Cream'] },
+
+  // ===== Expansion batch 14 (Nov 2026): Partagás and Montecristo (non-Cuban), Don Tomás, Graycliff, Cusano. From trade press and retailers, not yet confirmed. =====
+  { b: 'Partagás', n: 'Black Label', w: 'Broadleaf', bi: 'Dominican Republic', f: 'Nicaragua, Dominican Republic (ligero)', o: 'Dominican Republic', s: 5, notes: ['Cocoa', 'Earth', 'Pepper', 'Leather'] },
+  { b: 'Partagás', n: 'Legend', w: 'Other', bi: 'Honduras (Olancho San Agustín)', o: 'Dominican Republic', s: 4, notes: ['Earth', 'Spice', 'Cedar', 'Sweet'] },
+  { b: 'Partagás', n: '1845 Extra Oscuro', w: 'Other', f: 'Dominican Republic, Honduras, Nicaragua (ligero)', o: 'Dominican Republic', s: 5, notes: ['Cocoa', 'Earth', 'Pepper', 'Coffee'] },
+  { b: 'Montecristo', n: 'Monte', w: 'Habano', bi: 'Dominican Republic (Olor), Nicaragua (Corojo)', f: 'Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'] },
+  { b: 'Montecristo', n: 'Epic', w: 'Other', bi: 'Nicaragua', f: 'Dominican Republic, Nicaragua', o: 'Dominican Republic', s: 3, notes: ['Cedar', 'Spice', 'Cream', 'Nuts'] },
+  { b: 'Don Tomás', n: 'Clásico', w: 'Connecticut', bi: 'Honduras', f: 'Honduras, Nicaragua', o: 'Honduras', s: 3, notes: ['Cream', 'Cedar', 'Nuts', 'Spice'] },
+  { b: 'Don Tomás', n: 'Clásico Maduro', w: 'Broadleaf', bi: 'Honduras', f: 'Dominican Republic, Honduras', o: 'Honduras', s: 3, notes: ['Cocoa', 'Sweet', 'Earth', 'Coffee'] },
+  { b: 'Graycliff', n: 'Espresso', w: 'Maduro', bi: 'Cameroon', f: 'Ecuador, Philippines, Nicaragua', o: 'Other', s: 5, notes: ['Coffee', 'Cocoa', 'Earth', 'Pepper'] },
+  { b: 'Cusano', n: 'CC', w: 'Habano', f: 'Dominican Republic', o: 'Dominican Republic', s: 4, notes: ['Spice', 'Cedar', 'Leather', 'Sweet'] },
 ];
