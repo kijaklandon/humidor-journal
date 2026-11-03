@@ -141,6 +141,7 @@ function feedHtml() {
         </div>
         ${starsHtml(l.rating || 0)}
       </div>
+      ${photoImg(l, person.id)}
       <div class="card-title" style="margin-top:10px">${esc(l.name)}</div>
       <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
       ${l.notes?.length ? `<div class="chips">${l.notes.slice(0, 5).map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
@@ -212,6 +213,7 @@ function openFriendLog(person, l, back) {
       <span data-person="${person.id}">${personAvatar(person, 32)}</span>
       <div style="flex:1" data-person="${person.id}"><b>${esc(personName(person))}</b><div class="card-sub">${fmtDate(l.date)}</div></div>
     </div>
+    ${photoImg(l, person.id)}
     <div class="row"><h2 style="margin:0">${esc(l.name)}</h2>${starsHtml(l.rating || 0)}</div>
     <div class="card-sub">${esc(l.brand || '')}</div>
     <dl class="kv">

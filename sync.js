@@ -175,6 +175,7 @@ async function syncNow() {
     });
     lastSynced = Date.now();
     refreshCurrentView();
+    if (typeof syncPhotos === 'function') syncPhotos();
   } catch (e) {
     applyingRemote = false;
     syncError = e.message || String(e);
@@ -405,6 +406,7 @@ async function deleteAccount() {
   if (!confirm('Delete your account? This permanently removes your account and everything backed up in it: journal, humidor, profile, badges and friends. It cannot be undone.')) return;
   const typed = prompt('To confirm, type DELETE');
   if ((typed || '').trim().toUpperCase() !== 'DELETE') return toast('Account not deleted');
+  try { await deleteAllPhotos(); } catch {}
   const { error } = await sb.rpc('delete_my_account');
   if (error) return toast("Couldn't delete your account. Check your connection");
   const wipe = confirm('Your account is deleted. Also erase your journal from this phone? Choose Cancel to keep it here, offline.');
@@ -417,6 +419,7 @@ async function deleteAccount() {
     for (const k of [KEY, INV_KEY, PROFILE_KEY, REVIEW_KEY, ACH_KEY, PEAK_KEY]) {
       try { localStorage.removeItem(k); } catch {}
     }
+    try { indexedDB.deleteDatabase('mywrap'); } catch {}
     applyingRemote = false;
   }
   renderAccount();

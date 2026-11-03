@@ -228,3 +228,6 @@ create policy "read my blocks" on public.blocks for select to authenticated
   using (blocker = auth.uid());
 create policy "unblock" on public.blocks for delete to authenticated
   using (blocker = auth.uid());
+
+-- ---------- Cigar photos ----------
+-- See supabase/add-photos.sql (private "photos" storage bucket and its access rules).

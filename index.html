@@ -183,6 +183,14 @@
   .badge-tile.featured-on { border-color: var(--accent); }
   .badge-name { font-size: 12px; font-weight: 600; line-height: 1.2; }
   .badge-tier { font-size: 11px; color: var(--muted); font-weight: 700; }
+  /* Cigar photos (filled in by photos.js) */
+  .photo { border-radius: 12px; overflow: hidden; background: var(--surface-2); margin: 10px 0; }
+  .photo img { display: block; width: 100%; max-height: 360px; object-fit: cover; opacity: 0; transition: opacity .2s; }
+  .photo img.ok { opacity: 1; }
+  .photo.thumb { width: 60px; height: 60px; flex: none; margin: 0; }
+  .photo.thumb img { height: 60px; }
+  .photo-edit { margin: 4px 0 0; }
+  .photo-edit img { max-height: 240px; }
   .badge-tier.on { background: #1a140f; padding: 1px 8px; border-radius: 999px; }
   .badge-flag { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: .6px; }
   .featured { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
@@ -337,6 +345,10 @@
       <label class="field"><span>Paired with (optional)</span>
         <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
       </label>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Photo (optional)</span>
+        <div id="f-photo"></div>
+        <input type="file" id="f-photo-input" accept="image/*" hidden>
+      </div>
       <details id="f-detail" class="detail-box">
         <summary>Detailed smoke notes <span class="muted">(optional)</span></summary>
         <div class="mini-label">Construction</div>
@@ -433,6 +445,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="catalog.js"></script>
+<script src="photos.js"></script>
 <script>
 // ---------- Reference data ----------
 const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
@@ -634,6 +647,7 @@ function resetForm(prefill) {
   formScores = {};
   formThirds = [new Set(), new Set(), new Set()];
   pendingInvId = null;
+  setFormPhoto({});
   THIRDS.forEach((_, i) => $(`#f-third-${i}`) && ($(`#f-third-${i}`).value = ''));
   $('#f-detail').open = false;
   if (prefill) {
@@ -667,6 +681,7 @@ function editLog(id) {
   $('#f-pairing').value = l.pairing || '';
   $('#f-again').checked = !!l.again;
   $('#f-private').checked = !!l.private;
+  setFormPhoto(l.photo ? { id: l.id, ver: l.photo } : {});
   formRating = l.rating;
   formNotes = new Set(l.notes || []);
   const d = l.detail || {};
@@ -690,8 +705,9 @@ $('#log-form').addEventListener('submit', e => {
   const detail = readDetailInput();
   // Flavors from the thirds feed the overall flavors (and so the recommendations)
   const allNotes = new Set([...formNotes, ...(detail?.thirds || []).flatMap(t => t.notes)]);
+  const entryId = id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const entry = {
-    id: id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: entryId,
     name: $('#f-name').value.trim(),
     brand: $('#f-brand').value.trim(),
     wrapper: $('#f-wrapper').value,
@@ -705,6 +721,7 @@ $('#log-form').addEventListener('submit', e => {
     pairing: $('#f-pairing').value.trim(),
     again: $('#f-again').checked,
     private: $('#f-private').checked || undefined,
+    photo: commitFormPhoto(entryId, logs.find(x => x.id === id)?.photo),
     detail,
     created: id ? (logs.find(x => x.id === id)?.created || Date.now()) : Date.now(),
   };
@@ -780,12 +797,17 @@ function renderSmoked() {
 
   $('#journal-list').innerHTML = list.length ? list.map(l => `
     <div class="card tap" data-id="${l.id}">
-      <div class="row">
-        <div class="card-title">${esc(l.name)}</div>
-        ${starsHtml(l.rating)}
+      <div style="display:flex;gap:12px">
+        ${photoImg(l, null, 'thumb')}
+        <div style="flex:1;min-width:0">
+          <div class="row">
+            <div class="card-title">${esc(l.name)}</div>
+            ${starsHtml(l.rating)}
+          </div>
+          <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
+          <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}${l.detail ? ' · Detailed notes' : ''}${l.private ? ' · Private' : ''}</div>
+        </div>
       </div>
-      <div class="card-sub">${esc([l.brand, l.wrapper, STRENGTHS[l.strength - 1]].filter(Boolean).join(' · '))}</div>
-      <div class="card-sub">${fmtDate(l.date)}${l.again ? ' · Would smoke again' : ''}${l.detail ? ' · Detailed notes' : ''}${l.private ? ' · Private' : ''}</div>
       ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
     </div>`).join('') : '<p class="muted">No cigars match that search.</p>';
 }
@@ -800,6 +822,7 @@ function openDetail(id) {
   const l = logs.find(x => x.id === id);
   if (!l) return;
   $('#sheet-body').innerHTML = `
+    ${photoImg(l, null)}
     <div class="row"><h2 style="margin:0">${esc(l.name)}</h2>${starsHtml(l.rating)}</div>
     <div class="card-sub">${esc(l.brand)}</div>
     <dl class="kv">
@@ -824,6 +847,7 @@ function openDetail(id) {
     if (act === 'close') closeSheet();
     if (act === 'edit') editLog(id);
     if (act === 'delete' && confirm(`Delete ${l.name} from your journal?`)) {
+      forgetPhoto(l);
       logs = logs.filter(x => x.id !== id);
       save();
       closeSheet();
@@ -1731,6 +1755,7 @@ $('#clear-btn').addEventListener('click', () => {
   if (!logs.length && !Object.keys(reviews).length && !inventory.length && !Object.keys(profile).length) { toast('Nothing to delete'); return; }
   const signedIn = typeof account !== 'undefined' && account;
   if (confirm(`Delete your journal, humidor, profile, achievements and vault reviews?${signedIn ? ' This also deletes them from your account.' : ''} This cannot be undone. Export a backup first if you want to keep them.`)) {
+    logs.forEach(forgetPhoto);
     logs = [];
     save();
     reviews = {};
