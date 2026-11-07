@@ -115,6 +115,8 @@
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   textarea { min-height: 90px; resize: vertical; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .combo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+  .combo select { width: auto; }
   input[type=range] { width: 100%; accent-color: var(--accent); }
   .range-label { color: var(--accent); font-weight: 600; }
 
@@ -381,6 +383,21 @@
         <label class="field"><span>Size / vitola</span><input type="text" id="f-size" placeholder="e.g. Robusto"></label>
         <label class="field"><span>Date smoked</span><input type="date" id="f-date"></label>
       </div>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Where you smoked (optional)</span>
+        <div class="chips" id="f-place-chips"></div>
+        <input type="text" id="f-place" maxlength="40" placeholder="Or type a spot, e.g. Dad's porch" style="margin-top:8px">
+      </div>
+      <div class="two">
+        <label class="field"><span>Aged (optional)</span>
+          <div class="combo">
+            <input type="number" id="f-aged" inputmode="decimal" min="0" max="999" step="any" placeholder="e.g. 3">
+            <select id="f-aged-unit"><option value="d">days</option><option value="w">weeks</option><option value="m" selected>months</option><option value="y">years</option></select>
+          </div>
+        </label>
+        <label class="field"><span>Smoke time (min)</span>
+          <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
+        </label>
+      </div>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
         <div class="rating-input" id="f-rating"></div>
       </div>
@@ -401,9 +418,6 @@
         <summary>Detailed smoke notes <span class="muted">(optional)</span></summary>
         <div class="mini-label">Construction</div>
         <div id="f-scores"></div>
-        <label class="field" style="margin-top:12px"><span>Smoke time (minutes)</span>
-          <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
-        </label>
         <div class="mini-label">Flavor by thirds</div>
         <p class="muted" style="font-size:13px;margin:0 0 8px">Flavors you tap here also count toward your overall flavors.</p>
         <div id="f-thirds"></div>
@@ -667,9 +681,55 @@ $('#f-thirds').addEventListener('click', e => {
 
 function readDetailInput() {
   const thirds = THIRDS.map((_, i) => ({ notes: [...formThirds[i]], text: $(`#f-third-${i}`).value.trim() }));
-  const time = Math.round(+$('#f-time').value) || null;
-  const filled = Object.keys(formScores).length || time || thirds.some(t => t.notes.length || t.text);
-  return filled ? { ...formScores, time, thirds } : undefined;
+  const filled = Object.keys(formScores).length || thirds.some(t => t.notes.length || t.text);
+  return filled ? { ...formScores, thirds } : undefined;
+}
+
+// Where you smoked: a few common spots, plus the ones you've typed before
+const PLACES = ['Home', 'Patio', 'Lounge', 'Bar', 'Golf course', 'Beach', 'On the water', 'Event'];
+const AGED_UNITS = { d: ['day', 'days'], w: ['week', 'weeks'], m: ['month', 'months'], y: ['year', 'years'] };
+// Older logs kept smoke time inside the detailed notes
+const smokeTime = l => l.time || l.detail?.time || null;
+function fmtMinutes(m) {
+  const h = Math.floor(m / 60), r = m % 60;
+  return h ? `${h} hr${r ? ` ${r} min` : ''}` : `${r} min`;
+}
+function fmtAged(a) {
+  if (!a?.n) return '';
+  const [one, many] = AGED_UNITS[a.u] || AGED_UNITS.m;
+  return `${a.n} ${a.n === 1 ? one : many}`;
+}
+// Rows for a log's info list: where, how long it aged, how long it lasted
+const extraRows = l => [
+  l.place && `<dt>Where</dt><dd>${esc(l.place)}</dd>`,
+  l.aged?.n && `<dt>Aged</dt><dd>${fmtAged(l.aged)}</dd>`,
+  smokeTime(l) && `<dt>Smoke time</dt><dd>${fmtMinutes(smokeTime(l))}</dd>`,
+].filter(Boolean).join('');
+
+function renderPlaceChips() {
+  const cur = $('#f-place').value.trim().toLowerCase();
+  const mine = [...new Set(logs.slice().reverse().map(l => l.place).filter(Boolean))]
+    .filter(p => !PLACES.some(x => x.toLowerCase() === p.toLowerCase()));
+  $('#f-place-chips').innerHTML = [...PLACES, ...mine].slice(0, 14).map(p =>
+    `<button type="button" class="chip ${p.toLowerCase() === cur ? 'on' : ''}" data-place="${esc(p)}">${esc(p)}</button>`).join('');
+}
+$('#f-place-chips').addEventListener('click', e => {
+  const p = e.target.closest('[data-place]')?.dataset.place;
+  if (!p) return;
+  // Tapping the selected spot again clears it
+  $('#f-place').value = $('#f-place').value.trim().toLowerCase() === p.toLowerCase() ? '' : p;
+  renderPlaceChips();
+});
+$('#f-place').addEventListener('input', renderPlaceChips);
+
+// Logging from the humidor: fill in how long it sat since the date bought
+function prefillAged(bought) {
+  const days = Math.round((new Date(today()) - new Date(bought)) / 864e5);
+  if (!(days >= 1)) return;
+  const [n, u] = days < 14 ? [days, 'd'] : days < 60 ? [Math.round(days / 7), 'w']
+    : days < 730 ? [Math.round(days / 30.44), 'm'] : [Math.round(days / 365.25 * 2) / 2, 'y'];
+  $('#f-aged').value = n;
+  $('#f-aged-unit').value = u;
 }
 
 function detailHtml(d) {
@@ -684,10 +744,10 @@ function detailHtml(d) {
       ${t.notes.length ? `<div class="chips">${t.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
       ${t.text ? `<div class="muted" style="font-size:14px;margin-top:4px">${esc(t.text)}</div>` : ''}
     </div>` : '').join('');
+  if (!scores && !thirds) return '';
   return `
     <h3>Smoke notes</h3>
     ${scores ? `<div class="score-view">${scores}</div>` : ''}
-    ${d.time ? `<p style="margin:6px 0">Smoke time: <b>${d.time} min</b></p>` : ''}
     ${thirds}`;
 }
 
@@ -733,6 +793,7 @@ function resetForm(prefill) {
   renderRatingInput();
   renderNotesInput();
   renderDetailInput();
+  renderPlaceChips();
 }
 
 function editLog(id) {
@@ -750,6 +811,10 @@ function editLog(id) {
   $('#f-date').value = l.date || '';
   $('#f-enjoyed').value = l.enjoyed || '';
   $('#f-pairing').value = l.pairing || '';
+  $('#f-place').value = l.place || '';
+  $('#f-aged').value = l.aged?.n || '';
+  $('#f-aged-unit').value = l.aged?.u || 'm';
+  $('#f-time').value = smokeTime(l) || '';
   $('#f-again').checked = !!l.again;
   $('#f-private').checked = !!l.private;
   setFormPhoto(l.photo ? { id: l.id, ver: l.photo } : {});
@@ -758,12 +823,12 @@ function editLog(id) {
   const d = l.detail || {};
   formScores = Object.fromEntries(SCORES.filter(s => d[s.k]).map(s => [s.k, d[s.k]]));
   formThirds = THIRDS.map((_, i) => new Set(d.thirds?.[i]?.notes || []));
-  $('#f-time').value = d.time || '';
-  $('#f-detail').open = !!l.detail;
+  $('#f-detail').open = !!detailHtml(l.detail);
   updateStrengthLabel();
   renderRatingInput();
   renderNotesInput();
   renderDetailInput();
+  renderPlaceChips();
   THIRDS.forEach((_, i) => $(`#f-third-${i}`).value = d.thirds?.[i]?.text || '');
   closeSheet();
   show('add');
@@ -790,6 +855,9 @@ $('#log-form').addEventListener('submit', e => {
     notes: [...allNotes],
     enjoyed: $('#f-enjoyed').value.trim(),
     pairing: $('#f-pairing').value.trim(),
+    place: $('#f-place').value.trim() || undefined,
+    aged: +$('#f-aged').value > 0 ? { n: +$('#f-aged').value, u: $('#f-aged-unit').value } : undefined,
+    time: Math.round(+$('#f-time').value) || undefined,
     again: $('#f-again').checked,
     private: $('#f-private').checked || undefined,
     photo: commitFormPhoto(entryId, logs.find(x => x.id === id)?.photo),
@@ -862,7 +930,7 @@ function renderSmoked() {
   $('#search').style.display = '';
   const q = $('#search').value.trim().toLowerCase();
   const list = logs
-    .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.enjoyed, l.pairing, (l.notes || []).join(' '), (l.detail?.thirds || []).map(t => t.text).join(' ')].join(' ').toLowerCase().includes(q))
+    .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.place, l.enjoyed, l.pairing, (l.notes || []).join(' '), (l.detail?.thirds || []).map(t => t.text).join(' ')].join(' ').toLowerCase().includes(q))
     .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
 
   $('#journal-list').innerHTML = backupNudgeHtml() + (list.length ? list.map(l => `
@@ -925,6 +993,7 @@ function openDetail(id) {
       <dt>Strength</dt><dd>${STRENGTHS[l.strength - 1]}</dd>
       ${l.size ? `<dt>Size</dt><dd>${esc(l.size)}</dd>` : ''}
       <dt>Smoked</dt><dd>${fmtDate(l.date)}</dd>
+      ${extraRows(l)}
       ${l.pairing ? `<dt>Paired with</dt><dd>${esc(l.pairing)}</dd>` : ''}
       <dt>Again?</dt><dd>${l.again ? 'Yes' : 'Not sure / no'}</dd>
     </dl>
@@ -1259,6 +1328,7 @@ function smokeOne(id) {
   closeSheet();
   resetForm({ n: i.name, b: i.brand, w: i.wrapper, o: i.origin || 'Other', s: i.strength, notes: i.notes || [] });
   $('#f-size').value = i.size || '';
+  if (i.date) prefillAged(i.date);
   pendingInvId = id;
   show('add');
 }

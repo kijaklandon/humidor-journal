@@ -221,6 +221,7 @@ function openFriendLog(person, l, back) {
       ${l.origin ? `<dt>Country</dt><dd>${esc(l.origin)}</dd>` : ''}
       ${l.strength ? `<dt>Strength</dt><dd>${STRENGTHS[l.strength - 1]}</dd>` : ''}
       ${l.size ? `<dt>Size</dt><dd>${esc(l.size)}</dd>` : ''}
+      ${extraRows(l)}
       ${l.pairing ? `<dt>Paired with</dt><dd>${esc(l.pairing)}</dd>` : ''}
       ${l.again ? `<dt>Again?</dt><dd>Would smoke again</dd>` : ''}
     </dl>
