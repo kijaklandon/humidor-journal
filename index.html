@@ -408,9 +408,6 @@
       <label class="field"><span>What did you enjoy (or not)?</span>
         <textarea id="f-enjoyed" placeholder="Smooth draw, big cocoa in the second third, a little harsh at the end…"></textarea>
       </label>
-      <label class="field"><span>Paired with (optional)</span>
-        <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
-      </label>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
         <div class="rating-input" id="f-rating"></div>
       </div>
@@ -428,6 +425,9 @@
         </label>
         <label class="field"><span>Smoke time in minutes</span>
           <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
+        </label>
+        <label class="field"><span>Paired with</span>
+          <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
         </label>
         <div class="mini-label">Construction</div>
         <div id="f-scores"></div>
@@ -832,7 +832,7 @@ function editLog(id) {
   const d = l.detail || {};
   formScores = Object.fromEntries(SCORES.filter(s => d[s.k]).map(s => [s.k, d[s.k]]));
   formThirds = THIRDS.map((_, i) => new Set(d.thirds?.[i]?.notes || []));
-  $('#f-detail').open = !!(detailHtml(l.detail) || l.aged?.n || smokeTime(l));
+  $('#f-detail').open = !!(detailHtml(l.detail) || l.aged?.n || smokeTime(l) || l.pairing);
   renderStrengthInput();
   renderRatingInput();
   renderNotesInput();
