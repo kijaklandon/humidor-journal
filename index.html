@@ -165,6 +165,8 @@
   .empty { text-align: center; padding: 36px 16px; }
   .empty .big { font-size: 44px; }
 
+  .low-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; margin-left: 6px; vertical-align: 2px;
+    border: 1px solid var(--danger); border-radius: 999px; color: var(--danger); white-space: nowrap; }
   .badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
   .tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
   .tag.mine { border-color: var(--accent); color: var(--accent); }
@@ -1371,6 +1373,9 @@ function restingFor(bought) {
   return say(Math.round(days / 365.25 * 2) / 2, 'year');
 }
 
+// A heads-up to restock when you're down to your last one or two
+const lowTag = qty => qty === 1 ? '<span class="low-tag">Last one</span>' : qty === 2 ? '<span class="low-tag">Running low</span>' : '';
+
 function renderHumidor() {
   const total = inventory.reduce((s, i) => s + i.qty, 0);
   const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
@@ -1392,7 +1397,7 @@ function renderHumidor() {
     <div class="card" data-inv="${i.id}">
       <div class="row" data-act="edit" style="cursor:pointer">
         <div>
-          <div class="card-title">${esc(i.name)}</div>
+          <div class="card-title">${esc(i.name)}${lowTag(i.qty)}</div>
           <div class="card-sub">${esc([i.brand, i.wrapper, STRENGTHS[i.strength - 1], i.size].filter(Boolean).join(' · '))}</div>
           ${i.store || i.date || i.price ? `<div class="card-sub">${esc([i.date ? 'Bought ' + fmtDate(i.date) : '', i.store, i.price ? money(i.price) + ' each' : ''].filter(Boolean).join(' · '))}</div>` : ''}
           ${restingFor(i.date) ? `<div class="card-sub" style="color:var(--accent)">${restingFor(i.date)}</div>` : ''}
