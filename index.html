@@ -98,6 +98,9 @@
   }
   button.chip { cursor: pointer; font: inherit; font-size: 14px; padding: 7px 12px; }
   button.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  /* The five strengths share one row, even on small phones */
+  .strength-pick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .strength-pick button.chip { font-size: 12.5px; padding: 8px 2px; text-align: center; white-space: nowrap; }
 
   .stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
   .stars .off { color: var(--off); }
@@ -389,7 +392,7 @@
         <label class="field"><span>Country</span><select id="f-origin"></select></label>
       </div>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">How strong was it?</span>
-        <div class="chips" id="f-strength"></div>
+        <div class="chips strength-pick" id="f-strength"></div>
       </div>
       <div class="two">
         <label class="field"><span>Size / vitola</span><input type="text" id="f-size" placeholder="e.g. Robusto"></label>
@@ -755,9 +758,11 @@ function detailHtml(d) {
 
 // Strength is the smoker's own call, so nothing is picked until they tap one
 let formStrength = 0;
+// Short names so all five buttons fit across a phone
+const STRENGTH_SHORT = ['Mild', 'Mild-Med', 'Medium', 'Med-Full', 'Full'];
 function renderStrengthInput() {
-  $('#f-strength').innerHTML = STRENGTHS.map((s, i) =>
-    `<button type="button" class="chip ${formStrength === i + 1 ? 'on' : ''}" data-s="${i + 1}">${s}</button>`).join('');
+  $('#f-strength').innerHTML = STRENGTH_SHORT.map((s, i) =>
+    `<button type="button" class="chip ${formStrength === i + 1 ? 'on' : ''}" data-s="${i + 1}" aria-label="${STRENGTHS[i]}">${s}</button>`).join('');
 }
 $('#f-strength').addEventListener('click', e => {
   const s = +e.target.closest('[data-s]')?.dataset.s;
