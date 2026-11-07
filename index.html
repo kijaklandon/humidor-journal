@@ -402,9 +402,6 @@
         <div class="chips pick-row" id="f-place-chips"></div>
         <input type="text" id="f-place" maxlength="40" placeholder="Or type a spot, e.g. Dad's porch" style="margin-top:8px">
       </div>
-      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
-        <div class="rating-input" id="f-rating"></div>
-      </div>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Flavors you picked up</span>
         <div class="chips" id="f-notes"></div>
       </div>
@@ -414,6 +411,9 @@
       <label class="field"><span>Paired with (optional)</span>
         <input type="text" id="f-pairing" placeholder="e.g. Bourbon, espresso">
       </label>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
+        <div class="rating-input" id="f-rating"></div>
+      </div>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Photo (optional)</span>
         <div id="f-photo"></div>
         <input type="file" id="f-photo-input" accept="image/*" hidden>
@@ -845,7 +845,7 @@ function editLog(id) {
 
 $('#log-form').addEventListener('submit', e => {
   e.preventDefault();
-  if (!formRating) { toast('Give it a star rating'); return; }
+  if (!formRating) { toast('Give it a star rating'); $('#f-rating').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   const id = $('#f-id').value;
   const detail = readDetailInput();
   // Flavors from the thirds feed the overall flavors (and so the recommendations)
