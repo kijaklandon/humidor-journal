@@ -127,14 +127,14 @@ function parseStrength(value) {
   return words[v];
 }
 
-// Ratings out of 5, 10 or 100 all come in as 1-5 stars
+// Ratings out of 5, 10 or 100 all come in as stars, to the nearest half star
 function parseRating(value) {
   const n = parseFloat(String(value).replace(',', '.'));
   const stars = (String(value).match(/★/g) || []).length;
   if (stars) return Math.min(5, stars);
   if (!(n > 0)) return 0;
   const five = n <= 5 ? n : n <= 10 ? n / 2 : n <= 100 ? n / 20 : 5;
-  return Math.min(5, Math.max(1, Math.round(five)));
+  return Math.min(5, Math.max(0.5, Math.round(five * 2) / 2));
 }
 
 // 2026-11-03, 11/3/2026, 11/3/26, "Nov 3, 2026" all become 2026-11-03
