@@ -379,8 +379,10 @@
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">How strong was it?</span>
         <div class="chips" id="f-strength"></div>
       </div>
-      <label class="field"><span>Size / vitola</span><div id="f-size-wrap"></div></label>
-      <label class="field"><span>Date smoked</span><input type="date" id="f-date"></label>
+      <div class="two">
+        <label class="field"><span>Size / vitola</span><input type="text" id="f-size" placeholder="e.g. Robusto"></label>
+        <label class="field"><span>Date smoked</span><input type="date" id="f-date"></label>
+      </div>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Where you smoked (optional)</span>
         <div class="chips" id="f-place-chips"></div>
         <input type="text" id="f-place" maxlength="40" placeholder="Or type a spot, e.g. Dad's porch" style="margin-top:8px">
@@ -604,40 +606,6 @@ $('#settings-back').addEventListener('click', () => show(lastView));
 let formRating = 0;
 let formNotes = new Set();
 
-// Common sizes with their usual length (inches) x ring gauge; "Other" lets you type your own
-const SIZES = [
-  ['Cigarillo', '4 x 26'], ['Petit Corona', '4½ x 42'], ['Corona', '5½ x 42'], ['Corona Gorda', '5⅝ x 46'],
-  ['Panatela', '6 x 38'], ['Lonsdale', '6½ x 42'], ['Lancero', '7 x 38'], ['Short Robusto', '4 x 50'],
-  ['Robusto', '5 x 50'], ['Toro', '6 x 50'], ['Gran Toro', '6 x 54'], ['Gordo', '6 x 60'],
-  ['Churchill', '7 x 48'], ['Double Corona', '7½ x 50'], ['Belicoso', '5 x 52'], ['Torpedo', '6 x 52'],
-  ['Perfecto', 'varies'], ['Figurado', 'varies'],
-];
-// Old logs may have typed sizes; match those to the list when the spelling is the same
-const knownSize = v => SIZES.find(([n]) => n.toLowerCase() === String(v || '').trim().toLowerCase())?.[0];
-function sizeFieldHtml(id, value) {
-  const pick = value ? knownSize(value) || 'other' : '';
-  return `<select id="${id}" data-size>
-      <option value="">Pick a size</option>
-      ${SIZES.map(([n, d]) => `<option value="${n}" ${n === pick ? 'selected' : ''}>${n} · ${d}</option>`).join('')}
-      <option value="other" ${pick === 'other' ? 'selected' : ''}>Other (type it)</option>
-    </select>
-    <input type="text" id="${id}-other" maxlength="40" placeholder="Type the size" value="${pick === 'other' ? esc(value) : ''}" ${pick === 'other' ? '' : 'hidden'} style="margin-top:8px">`;
-}
-function setSize(id, value) {
-  const pick = value ? knownSize(value) || 'other' : '';
-  $(`#${id}`).value = pick;
-  $(`#${id}-other`).value = pick === 'other' ? value : '';
-  $(`#${id}-other`).hidden = pick !== 'other';
-}
-const readSize = id => $(`#${id}`).value === 'other' ? $(`#${id}-other`).value.trim() : $(`#${id}`).value;
-document.addEventListener('change', e => {
-  if (!e.target.matches('select[data-size]')) return;
-  const other = $(`#${e.target.id}-other`);
-  other.hidden = e.target.value !== 'other';
-  if (!other.hidden) other.focus();
-});
-$('#f-size-wrap').innerHTML = sizeFieldHtml('f-size', '');
-
 $('#f-wrapper').innerHTML = WRAPPERS.map(w => `<option>${w}</option>`).join('');
 $('#f-origin').innerHTML = ORIGINS.map(o => `<option>${o}</option>`).join('');
 
@@ -802,7 +770,6 @@ function resetForm(prefill) {
   $('#f-id').value = '';
   $('#form-title').textContent = 'Log a cigar';
   $('#f-date').value = today();
-  setSize('f-size', '');
   formStrength = 0;
   formRating = 0;
   formNotes = new Set();
@@ -836,7 +803,7 @@ function editLog(id) {
   $('#f-wrapper').value = l.wrapper;
   $('#f-origin').value = l.origin;
   formStrength = l.strength || 0;
-  setSize('f-size', l.size);
+  $('#f-size').value = l.size || '';
   $('#f-date').value = l.date || '';
   $('#f-enjoyed').value = l.enjoyed || '';
   $('#f-pairing').value = l.pairing || '';
@@ -878,7 +845,7 @@ $('#log-form').addEventListener('submit', e => {
     wrapper: $('#f-wrapper').value,
     origin: $('#f-origin').value,
     strength: formStrength || undefined,
-    size: readSize('f-size'),
+    size: $('#f-size').value.trim(),
     date: $('#f-date').value,
     rating: formRating,
     notes: [...allNotes],
@@ -1375,8 +1342,10 @@ function openInvForm(item, c) {
       <label class="field"><span>Wrapper</span><select id="i-wrapper">${WRAPPERS.map(w => `<option ${w === (v.wrapper || 'Habano') ? 'selected' : ''}>${w}</option>`).join('')}</select></label>
       <label class="field"><span>Strength</span><select id="i-strength">${STRENGTHS.map((s, k) => `<option value="${k + 1}" ${k + 1 === (v.strength || 3) ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
     </div>
-    <label class="field"><span>Size / vitola</span>${sizeFieldHtml('i-size', v.size)}</label>
-    <label class="field"><span>How many</span><input type="number" id="i-qty" inputmode="numeric" min="1" value="${v.qty || 1}"></label>
+    <div class="two">
+      <label class="field"><span>How many</span><input type="number" id="i-qty" inputmode="numeric" min="1" value="${v.qty || 1}"></label>
+      <label class="field"><span>Size / vitola</span><input type="text" id="i-size" placeholder="e.g. Robusto" value="${esc(v.size || '')}"></label>
+    </div>
     <div class="two">
       <label class="field"><span>Price each ($)</span><input type="number" id="i-price" inputmode="decimal" min="0" step="0.01" placeholder="Optional" value="${v.price || ''}"></label>
       <label class="field"><span>Date bought</span><input type="date" id="i-date" value="${esc(v.date || (item ? '' : today()))}"></label>
@@ -1419,7 +1388,7 @@ function openInvForm(item, c) {
       strength: +$('#i-strength').value,
       notes,
       qty: Math.max(1, Math.round(+$('#i-qty').value) || 1),
-      size: readSize('i-size'),
+      size: $('#i-size').value.trim(),
       price: +$('#i-price').value || null,
       date: $('#i-date').value,
       store: $('#i-store').value.trim(),
