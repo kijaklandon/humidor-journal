@@ -376,9 +376,9 @@
         <label class="field"><span>Wrapper</span><select id="f-wrapper"></select></label>
         <label class="field"><span>Country</span><select id="f-origin"></select></label>
       </div>
-      <label class="field"><span>Strength: <span id="f-strength-label" class="range-label"></span></span>
-        <input type="range" id="f-strength" min="1" max="5" step="1" value="3">
-      </label>
+      <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">How strong was it?</span>
+        <div class="chips" id="f-strength"></div>
+      </div>
       <div class="two">
         <label class="field"><span>Size / vitola</span><input type="text" id="f-size" placeholder="e.g. Robusto"></label>
         <label class="field"><span>Date smoked</span><input type="date" id="f-date"></label>
@@ -722,16 +722,6 @@ $('#f-place-chips').addEventListener('click', e => {
 });
 $('#f-place').addEventListener('input', renderPlaceChips);
 
-// Logging from the humidor: fill in how long it sat since the date bought
-function prefillAged(bought) {
-  const days = Math.round((new Date(today()) - new Date(bought)) / 864e5);
-  if (!(days >= 1)) return;
-  const [n, u] = days < 14 ? [days, 'd'] : days < 60 ? [Math.round(days / 7), 'w']
-    : days < 730 ? [Math.round(days / 30.44), 'm'] : [Math.round(days / 365.25 * 2) / 2, 'y'];
-  $('#f-aged').value = n;
-  $('#f-aged-unit').value = u;
-}
-
 function detailHtml(d) {
   if (!d) return '';
   const scores = SCORES.filter(s => d[s.k]).map(s => `
@@ -751,10 +741,21 @@ function detailHtml(d) {
     ${thirds}`;
 }
 
-const updateStrengthLabel = () => $('#f-strength-label').textContent = STRENGTHS[$('#f-strength').value - 1];
-$('#f-strength').addEventListener('input', updateStrengthLabel);
+// Strength is the smoker's own call, so nothing is picked until they tap one
+let formStrength = 0;
+function renderStrengthInput() {
+  $('#f-strength').innerHTML = STRENGTHS.map((s, i) =>
+    `<button type="button" class="chip ${formStrength === i + 1 ? 'on' : ''}" data-s="${i + 1}">${s}</button>`).join('');
+}
+$('#f-strength').addEventListener('click', e => {
+  const s = +e.target.closest('[data-s]')?.dataset.s;
+  if (!s) return;
+  // Tapping the selected strength again clears it
+  formStrength = formStrength === s ? 0 : s;
+  renderStrengthInput();
+});
 
-// Picking a known cigar fills in its details
+// Picking a known cigar fills in only what's printed on the band: name, brand, wrapper, country
 $('#f-name').addEventListener('change', () => {
   const c = findCatalog($('#f-name').value);
   if (!c) return;
@@ -762,9 +763,6 @@ $('#f-name').addEventListener('change', () => {
   $('#f-brand').value = c.b;
   $('#f-wrapper').value = c.w;
   $('#f-origin').value = c.o;
-  $('#f-strength').value = c.s;
-  updateStrengthLabel();
-  if (!formNotes.size) { formNotes = new Set(c.notes); renderNotesInput(); }
 });
 
 function resetForm(prefill) {
@@ -772,7 +770,7 @@ function resetForm(prefill) {
   $('#f-id').value = '';
   $('#form-title').textContent = 'Log a cigar';
   $('#f-date').value = today();
-  $('#f-strength').value = 3;
+  formStrength = 0;
   formRating = 0;
   formNotes = new Set();
   formScores = {};
@@ -786,10 +784,8 @@ function resetForm(prefill) {
     $('#f-brand').value = prefill.b;
     $('#f-wrapper').value = prefill.w;
     $('#f-origin').value = prefill.o;
-    $('#f-strength').value = prefill.s;
-    formNotes = new Set(prefill.notes);
   }
-  updateStrengthLabel();
+  renderStrengthInput();
   renderRatingInput();
   renderNotesInput();
   renderDetailInput();
@@ -806,7 +802,7 @@ function editLog(id) {
   $('#f-brand').value = l.brand || '';
   $('#f-wrapper').value = l.wrapper;
   $('#f-origin').value = l.origin;
-  $('#f-strength').value = l.strength;
+  formStrength = l.strength || 0;
   $('#f-size').value = l.size || '';
   $('#f-date').value = l.date || '';
   $('#f-enjoyed').value = l.enjoyed || '';
@@ -824,7 +820,7 @@ function editLog(id) {
   formScores = Object.fromEntries(SCORES.filter(s => d[s.k]).map(s => [s.k, d[s.k]]));
   formThirds = THIRDS.map((_, i) => new Set(d.thirds?.[i]?.notes || []));
   $('#f-detail').open = !!detailHtml(l.detail);
-  updateStrengthLabel();
+  renderStrengthInput();
   renderRatingInput();
   renderNotesInput();
   renderDetailInput();
@@ -848,7 +844,7 @@ $('#log-form').addEventListener('submit', e => {
     brand: $('#f-brand').value.trim(),
     wrapper: $('#f-wrapper').value,
     origin: $('#f-origin').value,
-    strength: +$('#f-strength').value,
+    strength: formStrength || undefined,
     size: $('#f-size').value.trim(),
     date: $('#f-date').value,
     rating: formRating,
@@ -990,7 +986,7 @@ function openDetail(id) {
     <dl class="kv">
       <dt>Wrapper</dt><dd>${esc(l.wrapper)}</dd>
       <dt>Country</dt><dd>${esc(l.origin)}</dd>
-      <dt>Strength</dt><dd>${STRENGTHS[l.strength - 1]}</dd>
+      ${l.strength ? `<dt>Strength</dt><dd>${STRENGTHS[l.strength - 1]}</dd>` : ''}
       ${l.size ? `<dt>Size</dt><dd>${esc(l.size)}</dd>` : ''}
       <dt>Smoked</dt><dd>${fmtDate(l.date)}</dd>
       ${extraRows(l)}
@@ -1035,10 +1031,12 @@ function buildProfile() {
     add(p.family, WRAPPER_FAMILY[l.wrapper], w);
     add(p.origin, l.origin, w);
     (l.notes || []).forEach(n => add(p.notes, n, w));
-    if (w > 0) { sSum += l.strength * w; sW += w; }
+    if (w > 0 && l.strength) { sSum += l.strength * w; sW += w; }
   }
+  // Strength is optional on logs, so only the ones that have it count
+  const rated = logs.filter(l => l.strength);
   if (sW) p.strength = sSum / sW;
-  else if (logs.length) p.strength = logs.reduce((s, l) => s + l.strength, 0) / logs.length;
+  else if (rated.length) p.strength = rated.reduce((s, l) => s + l.strength, 0) / rated.length;
   return p;
 }
 
@@ -1326,9 +1324,7 @@ function smokeOne(id) {
   const i = inventory.find(x => x.id === id);
   if (!i) return;
   closeSheet();
-  resetForm({ n: i.name, b: i.brand, w: i.wrapper, o: i.origin || 'Other', s: i.strength, notes: i.notes || [] });
-  $('#f-size').value = i.size || '';
-  if (i.date) prefillAged(i.date);
+  resetForm({ n: i.name, b: i.brand, w: i.wrapper, o: i.origin || 'Other' });
   pendingInvId = id;
   show('add');
 }
