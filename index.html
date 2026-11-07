@@ -1020,7 +1020,8 @@ function openDetail(id) {
     ${l.notes?.length ? `<div class="chips" style="margin-bottom:12px">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
     ${l.enjoyed ? `<div class="quote">${esc(l.enjoyed)}</div>` : ''}
     ${detailHtml(l.detail)}
-    <div class="btn-row" style="margin-top:16px">
+    <button class="btn ghost block" data-act="again" style="margin-top:16px">Log it again</button>
+    <div class="btn-row" style="margin-top:10px">
       <button class="btn danger" data-act="delete">Delete</button>
       <button class="btn ghost" data-act="close">Close</button>
       <button class="btn" data-act="edit">Edit</button>
@@ -1029,6 +1030,12 @@ function openDetail(id) {
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'close') closeSheet();
     if (act === 'edit') editLog(id);
+    // A fresh log of the same cigar: only the band details carry over
+    if (act === 'again') {
+      closeSheet();
+      resetForm({ n: l.name, b: l.brand || '', w: l.wrapper, o: l.origin });
+      show('add');
+    }
     if (act === 'delete' && confirm(`Delete ${l.name} from your journal?`)) {
       forgetPhoto(l);
       logs = logs.filter(x => x.id !== id);
