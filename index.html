@@ -282,6 +282,20 @@
   nav.tabs button.tab-main:active .fab { transform: scale(.94); }
 
   /* Detail sheet */
+  /* Welcome screen: everyone signs in before using the app (above the app, below sheets) */
+  .gate {
+    position: fixed; inset: 0; z-index: 15; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  }
+  .gate[hidden] { display: none; }
+  .gate-inner { width: 100%; max-width: 360px; }
+  .gate-logo { font-family: Georgia, "Times New Roman", serif; font-size: 44px; margin: 0; letter-spacing: .5px; }
+  .gate-logo span { color: var(--accent); }
+  .gate-tag { color: var(--accent); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 6px 0 22px; }
+  .gate-pitch { color: var(--muted); margin: 0 0 28px; line-height: 1.5; }
+  .gate-fine { color: var(--muted); font-size: 12px; margin: 22px 0 0; }
+  .gate-fine a { color: var(--accent); }
   .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
   .backdrop.open { display: flex; }
   .sheet {
@@ -303,6 +317,15 @@
 </style>
 </head>
 <body>
+
+<!-- Shown until the person is signed in (sync.js fills it in) -->
+<div class="gate" id="gate">
+  <div class="gate-inner">
+    <h1 class="gate-logo">My<span>Wrap</span></h1>
+    <p class="gate-tag">Write · Record · Analyze · Preserve</p>
+    <p class="gate-pitch">Loading…</p>
+  </div>
+</div>
 
 <header class="top">
   <h1>My<span>Wrap</span></h1>

@@ -224,13 +224,46 @@ function refreshCurrentView() {
 
 // ---------- Sign in / sign up ----------
 
+// ---------- Welcome screen (an account is required to use MyWrap) ----------
+
+function renderGate() {
+  const g = $('#gate');
+  if (!g) return;
+  if (account) { g.hidden = true; return; }
+  g.hidden = false;
+  const shell = body => `
+    <div class="gate-inner">
+      <h1 class="gate-logo">My<span>Wrap</span></h1>
+      <p class="gate-tag">Write · Record · Analyze · Preserve</p>
+      ${body}
+    </div>`;
+  if (!sb) {
+    g.innerHTML = shell(`
+      <p class="gate-pitch">MyWrap needs an internet connection to sign in. Check your connection and try again.</p>
+      <button class="btn block" data-gate="retry">Try again</button>`);
+    return;
+  }
+  if (!authReady) { g.innerHTML = shell('<p class="gate-pitch">Loading…</p>'); return; }
+  g.innerHTML = shell(`
+    <p class="gate-pitch">Your cigar journal. Log every smoke, track your humidor, earn badges, get recommendations, and see what your friends are smoking.</p>
+    <button class="btn block" data-gate="signup">Create account</button>
+    <button class="btn ghost block" data-gate="signin" style="margin-top:10px">I already have an account</button>
+    <p class="gate-fine">MyWrap is for adults 21 and older. <a href="privacy.html" target="_blank">Privacy policy</a></p>`);
+}
+$('#gate')?.addEventListener('click', e => {
+  const act = e.target.closest('[data-gate]')?.dataset.gate;
+  if (act === 'retry') location.reload();
+  if (act === 'signup' || act === 'signin') openAuthForm(act);
+});
+
 async function setAccount(session) {
   const user = session?.user;
   const changed = account?.id !== user?.id;
   authReady = true;
   if (changed && typeof friendsCache !== 'undefined') friendsCache = null;
-  if (!user) { account = null; renderAccount(); refreshCurrentView(); return; }
+  if (!user) { account = null; renderGate(); renderAccount(); refreshCurrentView(); return; }
   account = { id: user.id, email: user.email, friendCode: account?.friendCode };
+  renderGate();
   renderAccount();
   if (changed) { refreshCurrentView(); syncNow(); }
 }
@@ -365,13 +398,28 @@ function friendlyAuthError(error) {
   return error.message;
 }
 
+// Removes this device's copy of the journal (it lives in the account)
+function clearLocalData() {
+  applyingRemote = true;
+  logs = []; inventory = []; profile = {}; reviews = {}; earned = {}; humidorPeak = 0;
+  for (const k of [KEY, INV_KEY, PROFILE_KEY, REVIEW_KEY, ACH_KEY, PEAK_KEY, BASE_KEY, 'mywrap.photosUp.v1', 'mywrap.photosDelete.v1']) {
+    try { localStorage.removeItem(k); } catch {}
+  }
+  try { indexedDB.deleteDatabase('mywrap'); } catch {}
+  applyingRemote = false;
+}
+
 async function signOut() {
-  if (!confirm('Sign out? Your journal stays on this phone. It just stops syncing until you sign in again.')) return;
+  if (!confirm('Sign out? Your journal is saved to your account and will be back when you sign in again.')) return;
+  // Back up the latest changes first; this device's copy is cleared on sign-out
   await syncNow();
+  if (syncError && !confirm("Couldn't back up your latest changes (check your connection). Sign out anyway? Anything not yet backed up will be lost.")) return;
   await sb.auth.signOut();
-  try { localStorage.removeItem(BASE_KEY); } catch {}
   account = null;
+  clearLocalData();
   renderAccount();
+  renderGate();
+  refreshCurrentView();
   toast('Signed out');
 }
 
@@ -427,20 +475,13 @@ async function deleteAccount() {
   try { await deleteAllPhotos(); } catch {}
   const { error } = await sb.rpc('delete_my_account');
   if (error) return toast("Couldn't delete your account. Check your connection");
-  const wipe = confirm('Your account is deleted. Also erase your journal from this phone? Choose Cancel to keep it here, offline.');
+  const wipe = confirm('Your account is deleted. Also erase your journal from this phone? Choose Cancel to keep it here; it will be added to a new account if you make one.');
   try { await sb.auth.signOut({ scope: 'local' }); } catch {}
   try { localStorage.removeItem(BASE_KEY); } catch {}
   account = null;
-  if (wipe) {
-    applyingRemote = true;
-    logs = []; inventory = []; profile = {}; reviews = {}; earned = {}; humidorPeak = 0;
-    for (const k of [KEY, INV_KEY, PROFILE_KEY, REVIEW_KEY, ACH_KEY, PEAK_KEY]) {
-      try { localStorage.removeItem(k); } catch {}
-    }
-    try { indexedDB.deleteDatabase('mywrap'); } catch {}
-    applyingRemote = false;
-  }
+  if (wipe) clearLocalData();
   renderAccount();
+  renderGate();
   refreshCurrentView();
   toast(wipe ? 'Account and data deleted' : 'Account deleted. Your journal stays on this phone');
 }
@@ -468,3 +509,4 @@ if (sb) {
   window.addEventListener('online', scheduleSync);
 }
 renderAccount();
+renderGate();
