@@ -372,6 +372,7 @@
     </div>
     <div id="journal-humidor" hidden>
       <div id="h-stats" class="stats"></div>
+      <div id="h-climate"></div>
       <button type="button" class="btn block" id="h-add" style="margin-bottom:14px">+ Add cigars to humidor</button>
       <div id="h-list"></div>
     </div>
@@ -1376,7 +1377,145 @@ function restingFor(bought) {
 // A heads-up to restock when you're down to your last one or two
 const lowTag = qty => qty === 1 ? '<span class="low-tag">Last one</span>' : qty === 2 ? '<span class="low-tag">Running low</span>' : '';
 
+// ---------- Humidor check-ins ----------
+// Humidity and temperature readings, newest first. They ride along with the synced
+// preferences (key "checkins"), so they follow you to your other signed-in devices.
+const CHECKINS_MAX = 100;
+const BOVEDA_DAYS = 90;   // two-way humidity packs usually need a look every 2-3 months
+const checkins = () => getPref('checkins') || [];
+const tempUnit = () => getPref('tempUnit') || (/^en-US/.test(navigator.language) ? 'F' : 'C');
+const toF = (t, unit) => unit === 'C' ? t * 9 / 5 + 32 : t;
+function showTemp(c) {
+  const f = toF(c.temp, c.unit);
+  return `${Math.round(tempUnit() === 'F' ? f : (f - 32) * 5 / 9)}°${tempUnit()}`;
+}
+const daysSince = date => Math.round((new Date(today() + 'T00:00') - new Date(date + 'T00:00')) / 864e5);
+const timeAgo = d => d <= 0 ? 'today' : d === 1 ? 'yesterday' : d < 14 ? `${d} days ago`
+  : d < 60 ? `${Math.round(d / 7)} weeks ago` : `${Math.round(d / 30.44)} months ago`;
+const readingText = c => [c.rh != null ? `${c.rh}%` : '', c.temp != null ? showTemp(c) : ''].filter(Boolean).join(' · ');
+
+// Most people keep cigars around 65-70% and under about 73°F (warmer invites tobacco beetles)
+function climateIssues(c) {
+  const out = [];
+  if (c.rh != null) {
+    if (c.rh < 62) out.push('A bit dry');
+    else if (c.rh > 75) out.push('Too humid, watch for mold');
+    else if (c.rh > 72) out.push('A bit humid');
+  }
+  if (c.temp != null && toF(c.temp, c.unit) > 73) out.push('Running warm');
+  return out;
+}
+
+function renderClimate() {
+  const list = checkins(), last = list.find(c => c.rh != null || c.temp != null);
+  const bov = list.find(c => c.boveda);
+  if (!list.length) {
+    $('#h-climate').innerHTML = `
+      <div class="card">
+        <div class="card-title">Humidor check-ins</div>
+        <p class="muted" style="font-size:14px;margin:4px 0 12px">Log your humidity and temperature now and then. Most people aim for 65–70% and under 70°F.</p>
+        <button type="button" class="btn small ghost" data-climate="log">Log a reading</button>
+      </div>`;
+    return;
+  }
+  const issues = last ? climateIssues(last) : [];
+  const reminders = [];
+  if (last && daysSince(last.date) > 7) reminders.push(`Last checked ${timeAgo(daysSince(last.date))}. Time for a quick check.`);
+  if (bov && daysSince(bov.date) > BOVEDA_DAYS) reminders.push(`Boveda packs last replaced ${timeAgo(daysSince(bov.date))}. Time to check them.`);
+  $('#h-climate').innerHTML = `
+    <div class="card">
+      <div class="row">
+        <div class="card-title">Humidor check-in</div>
+        ${last ? `<span class="muted" style="font-size:13px">${timeAgo(daysSince(last.date))}</span>` : ''}
+      </div>
+      ${last ? `
+        <div style="font-size:22px;font-weight:700;margin:4px 0 2px">${readingText(last)}</div>
+        <div class="card-sub" style="color:${issues.length ? 'var(--danger)' : 'var(--accent)'}">${issues.length ? issues.join(' · ') : 'Looking good'}</div>` : ''}
+      ${bov && daysSince(bov.date) <= BOVEDA_DAYS ? `<div class="card-sub">Boveda packs replaced ${timeAgo(daysSince(bov.date))}</div>` : ''}
+      ${reminders.map(t => `<p style="font-size:14px;margin:8px 0 0;color:var(--danger)">${t}</p>`).join('')}
+      <div class="btn-row" style="margin-top:12px">
+        <button type="button" class="btn small ghost" data-climate="history">History</button>
+        <button type="button" class="btn small" data-climate="log">Log a reading</button>
+      </div>
+    </div>`;
+}
+$('#h-climate').addEventListener('click', e => {
+  const act = e.target.closest('[data-climate]')?.dataset.climate;
+  if (act === 'log') openCheckinForm();
+  if (act === 'history') openCheckinHistory();
+});
+
+function openCheckinForm() {
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin-top:0">Log a reading</h2>
+    <div class="two">
+      <label class="field"><span>Humidity (%)</span>
+        <input type="number" id="c-rh" inputmode="decimal" min="0" max="100" step="any" placeholder="e.g. 68"></label>
+      <label class="field"><span>Temperature</span>
+        <div class="combo">
+          <input type="number" id="c-temp" inputmode="decimal" step="any" placeholder="${tempUnit() === 'F' ? 'e.g. 67' : 'e.g. 19'}">
+          <select id="c-unit"><option value="F">°F</option><option value="C">°C</option></select>
+        </div></label>
+    </div>
+    <label class="field"><span>Date</span><input type="date" id="c-date" value="${today()}"></label>
+    <label class="toggle field"><input type="checkbox" id="c-boveda"> <span style="margin:0;color:var(--text)">I replaced or recharged my Boveda packs</span></label>
+    <label class="field"><span>Note (optional)</span><input type="text" id="c-note" maxlength="80" placeholder="e.g. Added distilled water"></label>
+    <div class="btn-row">
+      <button class="btn ghost" data-act="close">Cancel</button>
+      <button class="btn" data-act="save">Save</button>
+    </div>`;
+  $('#c-unit').value = tempUnit();
+  $('#sheet-body').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'close') closeSheet();
+    if (act !== 'save') return;
+    const num = id => $(id).value.trim() === '' ? null : +$(id).value;
+    const rh = num('#c-rh'), temp = num('#c-temp'), boveda = $('#c-boveda').checked;
+    if (rh == null && temp == null && !boveda) { toast('Add a humidity or temperature reading'); return; }
+    if (rh != null && !(rh >= 0 && rh <= 100)) { toast('Humidity should be between 0 and 100%'); return; }
+    const unit = $('#c-unit').value;
+    const entry = {
+      id: Date.now().toString(36),
+      date: $('#c-date').value || today(),
+      rh, temp, unit,
+      boveda: boveda || undefined,
+      note: $('#c-note').value.trim() || undefined,
+    };
+    const next = [entry, ...checkins()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, CHECKINS_MAX);
+    if (unit !== tempUnit()) setPref('tempUnit', unit);
+    setPref('checkins', next);
+    closeSheet();
+    toast(climateIssues(entry).length ? `Saved. ${climateIssues(entry).join(', ')}` : 'Reading saved');
+  };
+  $('#sheet').classList.add('open');
+}
+
+function openCheckinHistory() {
+  const list = checkins();
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin-top:0">Check-in history</h2>
+    ${list.map(c => `
+      <div class="row" style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="min-width:0">
+          <div style="font-weight:600">${fmtDate(c.date)}${readingText(c) ? ` · ${readingText(c)}` : ''}</div>
+          ${c.boveda || c.note ? `<div class="card-sub">${esc([c.boveda ? 'Boveda packs replaced' : '', c.note].filter(Boolean).join(' · '))}</div>` : ''}
+        </div>
+        <button class="btn small ghost round" data-del="${c.id}" aria-label="Delete this reading">×</button>
+      </div>`).join('') || '<p class="muted">No readings yet.</p>'}
+    <div class="btn-row" style="margin-top:16px"><button class="btn ghost" data-act="close">Close</button></div>`;
+  $('#sheet-body').onclick = e => {
+    if (e.target.closest('[data-act="close"]')) closeSheet();
+    const id = e.target.closest('[data-del]')?.dataset.del;
+    if (id && confirm('Delete this reading?')) {
+      setPref('checkins', checkins().filter(c => c.id !== id));
+      openCheckinHistory();
+    }
+  };
+  $('#sheet').classList.add('open');
+}
+
 function renderHumidor() {
+  renderClimate();
   const total = inventory.reduce((s, i) => s + i.qty, 0);
   const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
   $('#h-stats').innerHTML = `
