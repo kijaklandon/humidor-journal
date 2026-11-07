@@ -493,6 +493,16 @@
 
     <h3>Your data</h3>
     <div class="card">
+      <div class="card-title">Spreadsheet</div>
+      <p class="muted" style="margin:6px 0 12px">Open your journal in Excel, Google Sheets or Numbers, or bring in cigars you tracked somewhere else.</p>
+      <div class="btn-row">
+        <button class="btn small ghost" id="csv-export-btn">Download spreadsheet</button>
+        <button class="btn small ghost" id="csv-import-btn">Import spreadsheet</button>
+      </div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Starting from scratch? <a href="#" id="csv-template-btn">Get a blank template</a> with the columns already set up.</p>
+      <input type="file" id="csv-file" accept=".csv,text/csv,text/comma-separated-values,text/plain" hidden>
+    </div>
+    <div class="card">
       <div class="card-title">Backup file</div>
       <p class="muted" style="margin:6px 0 12px">Signed in? Your journal is already backed up to your account. You can also save a copy as a file.</p>
       <div class="btn-row">
@@ -1936,6 +1946,7 @@ migrateEarned();
 checkAchievements(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
+<script src="csv.js"></script>
 <script src="sync.js"></script>
 <script src="friends.js"></script>
 </body>
