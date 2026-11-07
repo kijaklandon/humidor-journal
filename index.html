@@ -488,6 +488,7 @@
     <div class="card">
       <div class="card-title">Color theme</div>
       <div class="theme-grid" id="theme-picker"></div>
+      <label class="field" style="margin:16px 0 0"><span>Currency for prices</span><select id="pref-currency"></select></label>
       <label class="toggle field" style="margin:16px 0 0"><input type="checkbox" id="pref-hide-cubans"> <span style="margin:0;color:var(--text)">Hide Cuban cigars <span class="muted" style="font-size:13px">· from Browse, For You and suggestions when logging</span></span></label>
     </div>
 
@@ -1286,8 +1287,6 @@ function invCount(c) {
   return inventory.filter(i => invKey(i) === full || (!i.brand && i.name.toLowerCase() === c.n.toLowerCase()))
     .reduce((s, i) => s + i.qty, 0);
 }
-const money = n => '$' + n.toFixed(n % 1 ? 2 : 0);
-
 function renderHumidor() {
   const total = inventory.reduce((s, i) => s + i.qty, 0);
   const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
@@ -1370,7 +1369,7 @@ function openInvForm(item, c) {
       <label class="field"><span>Size / vitola</span><input type="text" id="i-size" placeholder="e.g. Robusto" value="${esc(v.size || '')}"></label>
     </div>
     <div class="two">
-      <label class="field"><span>Price each ($)</span><input type="number" id="i-price" inputmode="decimal" min="0" step="0.01" placeholder="Optional" value="${v.price || ''}"></label>
+      <label class="field"><span>Price each (${esc(currencySymbol())})</span><input type="number" id="i-price" inputmode="decimal" min="0" step="0.01" placeholder="Optional" value="${v.price || ''}"></label>
       <label class="field"><span>Date bought</span><input type="date" id="i-date" value="${esc(v.date || (item ? '' : today()))}"></label>
     </div>
     <label class="field"><span>Where you bought it</span><input type="text" id="i-store" placeholder="Optional" value="${esc(v.store || '')}"></label>
@@ -1852,9 +1851,35 @@ function setPref(k, v) {
 // The vault as this person wants to see it
 const visibleCatalog = () => getPref('hideCubans') ? CATALOG.filter(c => c.o !== 'Cuba') : CATALOG;
 
+// Currency for humidor prices. Only the symbol changes; amounts are never converted.
+const CURRENCIES = [
+  ['USD', 'US dollar'], ['CAD', 'Canadian dollar'], ['EUR', 'Euro'], ['GBP', 'British pound'],
+  ['AUD', 'Australian dollar'], ['NZD', 'New Zealand dollar'], ['MXN', 'Mexican peso'], ['CHF', 'Swiss franc'],
+  ['SEK', 'Swedish krona'], ['NOK', 'Norwegian krone'], ['DKK', 'Danish krone'], ['JPY', 'Japanese yen'],
+];
+const currency = () => getPref('currency') || 'USD';
+const moneyFormat = (code, cents) => new Intl.NumberFormat(undefined,
+  { style: 'currency', currency: code, minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 });
+function money(n) {
+  try { return moneyFormat(currency(), n % 1).format(n); }
+  catch { return n.toFixed(n % 1 ? 2 : 0); }
+}
+function currencySymbol(code = currency()) {
+  try { return moneyFormat(code).formatToParts(0).find(p => p.type === 'currency').value; }
+  catch { return code; }
+}
+$('#pref-currency').innerHTML = CURRENCIES.map(([code, name]) =>
+  `<option value="${code}">${name} (${esc(currencySymbol(code))})</option>`).join('');
+$('#pref-currency').addEventListener('change', e => {
+  setPref('currency', e.target.value);
+  toast(`Currency set to ${CURRENCIES.find(c => c[0] === e.target.value)[1]}`);
+});
+
 function applyPrefs() {
   const hide = !!getPref('hideCubans');
   $('#pref-hide-cubans').checked = hide;
+  $('#pref-currency').value = currency();
+  if ($('#view-journal').classList.contains('active')) renderHumidor();
   $('#catalog-list').innerHTML = visibleCatalog().map(c => `<option value="${esc(fullName(c))}">`).join('');
   const o = $('#b-origin').value;
   $('#b-origin').innerHTML = '<option value="">Country</option>' + ORIGINS.filter(x => !(hide && x === 'Cuba')).map(x => `<option>${x}</option>`).join('');
