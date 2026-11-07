@@ -1358,6 +1358,19 @@ function invCount(c) {
   return inventory.filter(i => invKey(i) === full || (!i.brand && i.name.toLowerCase() === c.n.toLowerCase()))
     .reduce((s, i) => s + i.qty, 0);
 }
+// How long a cigar has rested since the date bought, e.g. "Resting 4 months"
+function restingFor(bought) {
+  if (!bought) return '';
+  const days = Math.round((new Date(today() + 'T00:00') - new Date(bought + 'T00:00')) / 864e5);
+  if (!(days >= 0)) return '';
+  const say = (n, word) => `Resting ${n} ${word}${n === 1 ? '' : 's'}`;
+  if (days < 1) return 'Resting since today';
+  if (days < 14) return say(days, 'day');
+  if (days < 60) return say(Math.round(days / 7), 'week');
+  if (days < 730) return say(Math.round(days / 30.44), 'month');
+  return say(Math.round(days / 365.25 * 2) / 2, 'year');
+}
+
 function renderHumidor() {
   const total = inventory.reduce((s, i) => s + i.qty, 0);
   const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
@@ -1382,6 +1395,7 @@ function renderHumidor() {
           <div class="card-title">${esc(i.name)}</div>
           <div class="card-sub">${esc([i.brand, i.wrapper, STRENGTHS[i.strength - 1], i.size].filter(Boolean).join(' · '))}</div>
           ${i.store || i.date || i.price ? `<div class="card-sub">${esc([i.date ? 'Bought ' + fmtDate(i.date) : '', i.store, i.price ? money(i.price) + ' each' : ''].filter(Boolean).join(' · '))}</div>` : ''}
+          ${restingFor(i.date) ? `<div class="card-sub" style="color:var(--accent)">${restingFor(i.date)}</div>` : ''}
         </div>
         <span class="badge">×${i.qty}</span>
       </div>
