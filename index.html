@@ -370,7 +370,20 @@
     </div>
     <div id="journal-smoked">
     <div id="stats" class="stats"></div>
-    <input type="search" id="search" placeholder="Search your cigars, notes, wrappers…" style="margin-bottom:14px">
+    <div id="journal-tools">
+      <input type="search" id="search" placeholder="Search your cigars, notes, wrappers…" style="margin-bottom:8px">
+      <div class="two" style="margin-bottom:14px">
+        <select id="j-sort" aria-label="Sort">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="best">Highest rated</option>
+          <option value="worst">Lowest rated</option>
+          <option value="name">Name A–Z</option>
+          <option value="brand">Brand A–Z</option>
+        </select>
+        <select id="j-filter" aria-label="Show"></select>
+      </div>
+    </div>
     <div id="journal-list"></div>
     </div>
   </section>
@@ -905,6 +918,40 @@ $('#f-cancel').addEventListener('click', () => show('journal'));
 
 // ---------- Journal ----------
 $('#search').addEventListener('input', renderJournal);
+$('#j-sort').addEventListener('change', renderJournal);
+$('#j-filter').addEventListener('change', renderJournal);
+
+// Ways to sort and narrow the Smoked list
+const byName = (a, b, k) => (a[k] || '').localeCompare(b[k] || '', undefined, { sensitivity: 'base' });
+const newest = (a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created;
+const JOURNAL_SORTS = {
+  new: newest,
+  old: (a, b) => -newest(a, b),
+  best: (a, b) => b.rating - a.rating || newest(a, b),
+  worst: (a, b) => a.rating - b.rating || newest(a, b),
+  name: (a, b) => byName(a, b, 'name') || newest(a, b),
+  brand: (a, b) => byName(a, b, 'brand') || byName(a, b, 'name') || newest(a, b),
+};
+const JOURNAL_FILTERS = {
+  all: ['All cigars', () => true],
+  r5: ['5 stars', l => l.rating === 5],
+  r4: ['4 stars and up', l => l.rating >= 4],
+  again: ["Would smoke again", l => l.again],
+  photo: ['With a photo', l => l.photo],
+  private: ['Private', l => l.private],
+};
+// Wrapper choices only list wrappers you've actually logged
+function renderJournalFilter() {
+  const sel = $('#j-filter'), cur = sel.value || 'all';
+  const wrappers = WRAPPERS.filter(w => logs.some(l => l.wrapper === w));
+  sel.innerHTML = Object.entries(JOURNAL_FILTERS).map(([k, [label]]) => `<option value="${k}">${label}</option>`).join('')
+    + (wrappers.length ? `<optgroup label="Wrapper">${wrappers.map(w => `<option value="w:${esc(w)}">${esc(w)}</option>`).join('')}</optgroup>` : '');
+  sel.value = [...sel.options].some(o => o.value === cur) ? cur : 'all';
+}
+function journalFilter(key) {
+  if (key.startsWith('w:')) return l => l.wrapper === key.slice(2);
+  return (JOURNAL_FILTERS[key] || JOURNAL_FILTERS.all)[1];
+}
 
 function topKey(counts) {
   let best = null, max = 0;
@@ -938,7 +985,7 @@ function renderSmoked() {
     <div class="stat"><b style="font-size:15px;line-height:26px">${esc(topKey(wrapperCounts) || '–')}</b><small>Fav wrapper</small></div>`;
 
   if (!logs.length) {
-    $('#search').style.display = 'none';
+    $('#journal-tools').hidden = true;
     $('#journal-list').innerHTML = `
       <div class="empty card">
         <h2>No cigars logged yet</h2>
@@ -947,13 +994,19 @@ function renderSmoked() {
       </div>`;
     return;
   }
-  $('#search').style.display = '';
+  $('#journal-tools').hidden = false;
+  renderJournalFilter();
   const q = $('#search').value.trim().toLowerCase();
+  const keep = journalFilter($('#j-filter').value);
   const list = logs
+    .filter(keep)
     .filter(l => !q || [l.name, l.brand, l.wrapper, l.origin, l.size, l.place, l.enjoyed, l.pairing, (l.notes || []).join(' '), (l.detail?.thirds || []).map(t => t.text).join(' ')].join(' ').toLowerCase().includes(q))
-    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
+    .sort(JOURNAL_SORTS[$('#j-sort').value] || newest);
+  const narrowed = q || $('#j-filter').value !== 'all';
 
-  $('#journal-list').innerHTML = backupNudgeHtml() + (list.length ? list.map(l => `
+  $('#journal-list').innerHTML = backupNudgeHtml()
+    + (narrowed && list.length ? `<p class="muted" style="font-size:13px;margin:0 0 8px">Showing ${list.length} of ${logs.length}</p>` : '')
+    + (list.length ? list.map(l => `
     <div class="card tap" data-id="${l.id}">
       <div style="display:flex;gap:12px">
         ${photoImg(l, null, 'thumb')}
@@ -967,7 +1020,7 @@ function renderSmoked() {
         </div>
       </div>
       ${l.notes?.length ? `<div class="chips">${l.notes.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>` : ''}
-    </div>`).join('') : '<p class="muted">No cigars match that search.</p>');
+    </div>`).join('') : '<p class="muted">No cigars match. Try a different search or "All cigars".</p>');
 }
 
 // Signed out with cigars logged? Remind them it's only on this phone.
