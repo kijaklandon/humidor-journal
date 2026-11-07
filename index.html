@@ -402,9 +402,6 @@
         <div class="chips pick-row" id="f-place-chips"></div>
         <input type="text" id="f-place" maxlength="40" placeholder="Or type a spot, e.g. Dad's porch" style="margin-top:8px">
       </div>
-      <label class="field"><span>Smoke time in minutes (optional)</span>
-        <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
-      </label>
       <div class="field" style="margin-bottom:14px"><span class="muted" style="font-size:14px">Your rating</span>
         <div class="rating-input" id="f-rating"></div>
       </div>
@@ -428,6 +425,9 @@
             <input type="number" id="f-aged" inputmode="decimal" min="0" max="999" step="any" placeholder="e.g. 3">
             <select id="f-aged-unit"><option value="d">days</option><option value="w">weeks</option><option value="m" selected>months</option><option value="y">years</option></select>
           </div>
+        </label>
+        <label class="field"><span>Smoke time in minutes</span>
+          <input type="number" id="f-time" inputmode="numeric" min="1" max="600" placeholder="e.g. 75">
         </label>
         <div class="mini-label">Construction</div>
         <div id="f-scores"></div>
@@ -832,7 +832,7 @@ function editLog(id) {
   const d = l.detail || {};
   formScores = Object.fromEntries(SCORES.filter(s => d[s.k]).map(s => [s.k, d[s.k]]));
   formThirds = THIRDS.map((_, i) => new Set(d.thirds?.[i]?.notes || []));
-  $('#f-detail').open = !!(detailHtml(l.detail) || l.aged?.n);
+  $('#f-detail').open = !!(detailHtml(l.detail) || l.aged?.n || smokeTime(l));
   renderStrengthInput();
   renderRatingInput();
   renderNotesInput();
