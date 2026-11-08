@@ -176,7 +176,10 @@
     background: var(--accent); color: var(--accent-ink);
     display: flex; align-items: center; justify-content: center;
     font: 700 24px Georgia, serif;
+    position: relative; overflow: hidden;
   }
+  .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .2s; }
+  .avatar img.ok { opacity: 1; }
   .stats.six { grid-template-columns: repeat(3, 1fr); }
   /* Achievements: earned list, tiered tracks, one-off challenges */
   .check {
@@ -1875,8 +1878,13 @@ function openStatList(id) {
 
 let showAllEarned = false;
 let showAllBadges = false;
+const PERSON_ICON = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>';
+function initialsOrIcon(name) {
+  const initials = (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  return initials ? esc(initials) : PERSON_ICON;
+}
+
 function renderProfile() {
-  const initials = (profile.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
   const favs = [
     profile.favCigar && `Favorite: ${profile.favCigar}`,
     profile.pairing && `Pairs with: ${profile.pairing}`,
@@ -1895,7 +1903,7 @@ function renderProfile() {
   $('#profile').innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:flex-start;gap:14px">
-        <div class="avatar">${initials ? esc(initials) : '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>'}</div>
+        <div class="avatar">${initialsOrIcon(profile.name)}${avatarImg(profile.avatar)}</div>
         <div style="flex:1;min-width:0">
           <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
           ${profile.name ? '' : '<div class="card-sub">Tap Edit profile to add your details</div>'}
@@ -1967,10 +1975,26 @@ $('#profile').addEventListener('click', e => {
   if (row) openStatList(row.dataset.track);
 });
 
+// Profile photo picked in the form: { ver } = keep, { blob, url } = new one, {} = none
+let formAvatar = {};
+function renderAvatarInput() {
+  const has = formAvatar.blob || formAvatar.ver;
+  $('#p-avatar-row').innerHTML = `
+    <div class="avatar">${initialsOrIcon($('#p-name')?.value ?? profile.name)}${formAvatar.url ? '<img alt="" class="ok">' : avatarImg(formAvatar.ver)}</div>
+    <div class="btn-row" style="margin:0;flex:1">
+      ${has ? '<button type="button" class="btn small ghost" data-act="avatar-remove">Remove</button>' : ''}
+      <button type="button" class="btn small ghost" data-act="avatar-pick">${has ? 'Change photo' : 'Add a photo'}</button>
+    </div>`;
+  if (formAvatar.url) $('#p-avatar-row img').src = formAvatar.url;
+}
+
 function openProfileForm() {
   const p = profile;
+  formAvatar = p.avatar ? { ver: p.avatar } : {};
   $('#sheet-body').innerHTML = `
     <h2 style="margin:0 0 12px">Edit profile</h2>
+    <div class="row" id="p-avatar-row" style="justify-content:flex-start;gap:14px;margin-bottom:14px"></div>
+    <input type="file" id="p-avatar-input" accept="image/*" hidden>
     <label class="field"><span>Name</span><input type="text" id="p-name" maxlength="40" value="${esc(p.name || '')}"></label>
     <label class="field"><span>Favorite cigar</span><input type="text" id="p-fav" list="catalog-list" placeholder="Start typing…" value="${esc(p.favCigar || '')}"></label>
     <label class="field"><span>Favorite pairing</span><input type="text" id="p-pairing" maxlength="40" placeholder="e.g. Bourbon, espresso" value="${esc(p.pairing || '')}"></label>
@@ -1984,10 +2008,33 @@ function openProfileForm() {
       <button class="btn ghost" data-act="close">Cancel</button>
       <button class="btn" data-act="save">Save</button>
     </div>`;
+  renderAvatarInput();
+  $('#p-avatar-input').onchange = async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const blob = await shrinkPhoto(file, AVATAR_MAX, true);
+      formAvatar = { blob, url: URL.createObjectURL(blob) };
+      renderAvatarInput();
+    } catch {
+      toast("Couldn't open that photo. Try another one");
+    }
+  };
   $('#sheet-body').onclick = e => {
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'close') return closeSheet();
+    if (act === 'avatar-pick') return $('#p-avatar-input').click();
+    if (act === 'avatar-remove') { formAvatar = {}; return renderAvatarInput(); }
     if (act !== 'save') return;
+    // A new or removed photo: save it on this device, and clear out the old one in the cloud
+    const oldAvatar = profile.avatar;
+    let avatar = formAvatar.ver || null;
+    if (formAvatar.blob) {
+      avatar = 'a' + Date.now().toString(36);
+      photoPut(AVATAR_ID, { ver: avatar, blob: formAvatar.blob }).then(() => syncPhotos()).catch(() => toast("Couldn't save the photo on this device"));
+    } else if (!avatar && oldAvatar) photoDel(AVATAR_ID);
+    if (oldAvatar && oldAvatar !== avatar) queuePhotoDelete(AVATAR_ID, oldAvatar);
     profile = {
       name: $('#p-name').value.trim(),
       favCigar: $('#p-fav').value.trim(),
@@ -1996,6 +2043,8 @@ function openProfileForm() {
       wrapper: $('#p-wrapper').value,
       bio: $('#p-bio').value.trim(),
       featured: profile.featured || [],
+      // null (not left out) so a removed photo also clears on your other devices
+      avatar: avatar || (oldAvatar ? null : undefined),
     };
     saveProfile();
     closeSheet();

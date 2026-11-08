@@ -35,7 +35,8 @@ const photoPut = (id, rec) => photoStore('readwrite', s => s.put(rec, id));
 const photoDel = id => photoStore('readwrite', s => s.delete(id)).catch(() => {});
 
 // ---------- Shrink a picked photo to a small JPEG ----------
-async function shrinkPhoto(file) {
+// `square` crops to the middle square first (for profile photos)
+async function shrinkPhoto(file, max = PHOTO_MAX, square = false) {
   const src = URL.createObjectURL(file);
   try {
     const img = await new Promise((resolve, reject) => {
@@ -44,11 +45,13 @@ async function shrinkPhoto(file) {
       i.onerror = () => reject(new Error('Not an image'));
       i.src = src;
     });
-    const k = Math.min(1, PHOTO_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const sw = square ? side : img.naturalWidth, sh = square ? side : img.naturalHeight;
+    const k = Math.min(1, max / Math.max(sw, sh));
     const c = document.createElement('canvas');
-    c.width = Math.round(img.naturalWidth * k);
-    c.height = Math.round(img.naturalHeight * k);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    c.width = Math.round(sw * k);
+    c.height = Math.round(sh * k);
+    c.getContext('2d').drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, c.width, c.height);
     return await new Promise(resolve => c.toBlob(resolve, 'image/jpeg', 0.82));
   } finally {
     URL.revokeObjectURL(src);
@@ -84,6 +87,15 @@ function photoImg(log, owner, cls = '') {
   if (!log?.photo) return '';
   return `<div class="photo ${cls}"><img alt="" data-ph-id="${esc(log.id)}" data-ph-ver="${esc(log.photo)}" data-ph-owner="${esc(owner || '')}"></div>`;
 }
+
+// ---------- Profile photo ----------
+// Stored like a cigar photo under the id "avatar" (<user id>/avatar-<version>.jpg);
+// profile.avatar holds the version. The picture sits on top of the initials, so
+// the initials still show if it can't load.
+const AVATAR_ID = 'avatar';
+const AVATAR_MAX = 512;
+const avatarImg = (ver, owner) => ver
+  ? `<img alt="" data-ph-id="${AVATAR_ID}" data-ph-ver="${esc(ver)}" data-ph-owner="${esc(owner || '')}">` : '';
 
 async function hydratePhoto(img) {
   img.dataset.phDone = '1';
@@ -187,6 +199,15 @@ async function syncPhotos() {
       if (error) throw error;
       up.done[l.id] = l.photo;
       localStorage.setItem(PHOTO_UP_KEY, JSON.stringify(up));
+    }
+    if (profile.avatar && up.done[AVATAR_ID] !== profile.avatar) {
+      const rec = await photoGet(AVATAR_ID);
+      if (rec?.ver === profile.avatar) {
+        const { error } = await files.upload(`${uid}/${AVATAR_ID}-${rec.ver}.jpg`, rec.blob, { upsert: true, contentType: 'image/jpeg' });
+        if (error) throw error;
+        up.done[AVATAR_ID] = rec.ver;
+        localStorage.setItem(PHOTO_UP_KEY, JSON.stringify(up));
+      }
     }
 
     // Remove replaced and deleted photos

@@ -230,4 +230,5 @@ create policy "unblock" on public.blocks for delete to authenticated
   using (blocker = auth.uid());
 
 -- ---------- Cigar photos ----------
--- See supabase/add-photos.sql (private "photos" storage bucket and its access rules).
+-- See supabase/add-photos.sql (private "photos" storage bucket and its access rules)
+-- and supabase/add-avatars.sql (profile photos).

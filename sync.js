@@ -67,12 +67,17 @@ function mergeList(local, remoteRows, base) {
   return { merged, upserts, tombstones };
 }
 
-const PROFILE_COLS = { name: 'name', favCigar: 'fav_cigar', pairing: 'pairing', strength: 'strength', wrapper: 'wrapper', bio: 'bio', featured: 'featured' };
-// location and since are no longer asked for; always clear them
-const profileToRow = p => ({
-  ...Object.fromEntries(Object.entries(PROFILE_COLS).map(([k, col]) => [col, k === 'featured' ? (p[k] || []) : (p[k] ?? null)])),
-  location: null, since: null,
-});
+const PROFILE_COLS = { name: 'name', favCigar: 'fav_cigar', pairing: 'pairing', strength: 'strength', wrapper: 'wrapper', bio: 'bio', featured: 'featured', avatar: 'avatar' };
+// location and since are no longer asked for; always clear them.
+// The avatar column (supabase/add-avatars.sql) is only sent once a photo has been set or removed.
+const profileToRow = p => {
+  const row = {
+    ...Object.fromEntries(Object.entries(PROFILE_COLS).map(([k, col]) => [col, k === 'featured' ? (p[k] || []) : (p[k] ?? null)])),
+    location: null, since: null,
+  };
+  if (p.avatar === undefined) delete row.avatar;
+  return row;
+};
 const rowToProfile = row => {
   const p = {};
   for (const [k, col] of Object.entries(PROFILE_COLS)) {

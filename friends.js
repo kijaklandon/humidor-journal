@@ -13,7 +13,7 @@ const APP_URL = 'https://mywrapcigars.com/';
 const personName = p => p.name || p.friend_code || 'Cigar friend';
 const initialsOf = name => (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 const personAvatar = (p, size = 40) =>
-  `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc(initialsOf(p.name) || '•')}</div>`;
+  `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc(initialsOf(p.name) || '•')}${avatarImg(p.avatar, p.id)}</div>`;
 
 // Codes look like MW-7K3Q9. Accept "7k3q9", "mw 7k3q9", and old "HJ-" codes from
 // when the app was called Humidor Journal (same letters, new prefix).
@@ -34,7 +34,7 @@ async function loadFriends() {
   const ids = [...new Set(rows.map(r => r.follower === uid ? r.following : r.follower))];
   let people = {};
   if (ids.length) {
-    const { data, error: e2 } = await sb.from('profiles').select('id,name,friend_code').in('id', ids);
+    const { data, error: e2 } = await sb.from('profiles').select('*').in('id', ids);
     if (e2) throw e2;
     people = Object.fromEntries(data.map(p => [p.id, p]));
   }
