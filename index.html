@@ -335,6 +335,7 @@
   .kv dd { margin: 0; }
   .share-preview { display: grid; place-items: center; min-height: 240px; margin-bottom: 12px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
   .share-preview img { display: block; width: 100%; height: auto; }
+  .person-title { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-top: 2px; }
   .quote { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; }
 
   .toast {
@@ -572,8 +573,8 @@
 <div class="toast" id="toast"></div>
 
 <!-- ?v= makes phones fetch fresh copies after an update; bump it whenever these files change -->
-<script src="catalog.js?v=20261107b"></script>
-<script src="photos.js?v=20261107b"></script>
+<script src="catalog.js?v=20261107f"></script>
+<script src="photos.js?v=20261107f"></script>
 <script>
 // ---------- Reference data ----------
 const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
@@ -1765,6 +1766,77 @@ function medal(t, level, size = 56) {
   return `<span class="medal ${level ? '' : 'locked'}" style="--c:${tier ? tier.color : 'var(--border)'};--s:${size}px">${num}</span>`;
 }
 
+// ---------- Titles ----------
+// Some checkpoints also unlock a title you can show under your name
+const TITLES = [
+  { id: 'newcomer', track: 'logs', step: 1, name: 'Newcomer' },
+  { id: 'regular', track: 'logs', step: 10, name: 'Regular' },
+  { id: 'enthusiast', track: 'logs', step: 25, name: 'Enthusiast' },
+  { id: 'aficionado', track: 'logs', step: 50, name: 'Aficionado' },
+  { id: 'connoisseur', track: 'logs', step: 100, name: 'Connoisseur' },
+  { id: 'master', track: 'logs', step: 250, name: 'Master of the Leaf' },
+  { id: 'explorer', track: 'brands', step: 15, name: 'Brand Explorer' },
+  { id: 'brandhunter', track: 'brands', step: 50, name: 'Brand Hunter' },
+  { id: 'globetrotter', track: 'countries', step: 5, name: 'Globetrotter' },
+  { id: 'leafhunter', track: 'wrappers', step: 5, name: 'Leaf Hunter' },
+  { id: 'rarefinder', track: 'limited', step: 5, name: 'Rare Finder' },
+  { id: 'havana', track: 'cuban', step: 10, name: 'Havana Hand' },
+  { id: 'fullbodied', track: 'full', step: 10, name: 'Full-Bodied Fanatic' },
+  { id: 'topshelf', track: 'fivestar', step: 10, name: 'Top Shelf' },
+  { id: 'loyalist', track: 'loyal', step: 25, name: 'Brand Loyalist' },
+  { id: 'taster', track: 'notes', step: 25, name: 'Tasting Pro' },
+  { id: 'perfectionist', track: 'perfect', step: 5, name: 'Perfectionist' },
+  { id: 'pairingpro', track: 'pairing', step: 25, name: 'Pairing Pro' },
+  { id: 'collector', track: 'humidor', step: 50, name: 'Collector' },
+  { id: 'baron', track: 'humidor', step: 100, name: 'Humidor Baron' },
+];
+const titleTrack = ti => TRACKS.find(t => t.id === ti.track);
+const titleEarned = ti => !!earned[`${ti.track}:${ti.step}`] || trackValue(titleTrack(ti)) >= ti.step;
+const titleName = id => TITLES.find(ti => ti.id === id)?.name || '';
+const myTitle = () => { const ti = TITLES.find(x => x.id === profile.title); return ti && titleEarned(ti) ? ti.name : ''; };
+
+function openTitlePicker() {
+  const open = TITLES.filter(titleEarned), locked = TITLES.filter(ti => !titleEarned(ti));
+  const row = ti => `
+    <div class="ach-row" data-title="${ti.id}" style="cursor:pointer">
+      <div class="grow">
+        <div class="ach-title">${esc(ti.name)}</div>
+        <div class="ach-desc">${esc(titleTrack(ti).name)} · ${ti.step}</div>
+      </div>
+      <span class="check ${profile.title === ti.id ? 'on' : ''}">${profile.title === ti.id ? '✓' : ''}</span>
+    </div>`;
+  $('#sheet-body').innerHTML = `
+    <h2 style="margin:0">Your title</h2>
+    <p class="muted" style="font-size:14px;margin:4px 0 12px">It shows under your name, and friends who follow you see it too.</p>
+    ${open.length ? open.map(row).join('') : '<p class="muted">Log your first cigar to unlock your first title.</p>'}
+    ${open.length ? `
+      <div class="ach-row" data-title="" style="cursor:pointer">
+        <div class="grow"><div class="ach-title">No title</div></div>
+        <span class="check ${profile.title ? '' : 'on'}">${profile.title ? '' : '✓'}</span>
+      </div>` : ''}
+    ${locked.length ? `<h3>Locked · ${locked.length}</h3>
+      ${locked.map(ti => `
+        <div class="ach-row" style="opacity:.55">
+          <div class="grow">
+            <div class="ach-title">🔒 ${esc(ti.name)}</div>
+            <div class="ach-desc">Reach ${ti.step} in ${esc(titleTrack(ti).name)} · you have ${trackValue(titleTrack(ti))}</div>
+          </div>
+        </div>`).join('')}` : ''}
+    <button class="btn block ghost" data-act="close" style="margin-top:14px">Close</button>`;
+  $('#sheet-body').onclick = e => {
+    if (e.target.closest('[data-act="close"]')) return closeSheet();
+    const pick = e.target.closest('[data-title]');
+    if (!pick) return;
+    // null (not undefined) so clearing it syncs to your account
+    profile.title = pick.dataset.title || (profile.title ? null : undefined);
+    saveProfile();
+    renderProfile();
+    closeSheet();
+    toast(pick.dataset.title ? `Title set: ${titleName(pick.dataset.title)}` : 'Title removed');
+  };
+  $('#sheet').classList.add('open');
+}
+
 // Everything you can earn: each checkpoint of each stat
 const allGoals = () => TRACKS.flatMap(t => t.steps.map((s, i) =>
   ({ key: `${t.id}:${s}`, label: `${t.name} · ${TIERS[i].name} (${s})`, done: () => trackValue(t) >= s })));
@@ -1796,8 +1868,11 @@ function checkAchievements(silent) {
   if (!fresh.length) return;
   fresh.forEach(g => earned[g.key] = Date.now());
   try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch {}
-  // Wait for the "saved" toast to finish before celebrating
-  if (!silent) setTimeout(() => toast(fresh.length === 1
+  // Wait for the "saved" toast to finish before celebrating; a new title beats a plain checkpoint
+  const titles = TITLES.filter(ti => fresh.some(g => g.key === `${ti.track}:${ti.step}`));
+  if (!silent) setTimeout(() => toast(titles.length
+    ? `New title unlocked: ${titles[titles.length - 1].name}. Pick it in Profile`
+    : fresh.length === 1
     ? `Achievement unlocked: ${fresh[0].label}`
     : `${fresh.length} achievements unlocked`), 1500);
 }
@@ -1913,6 +1988,7 @@ function renderProfile() {
         <div class="avatar">${initialsOrIcon(profile.name)}${avatarImg(profile.avatar)}</div>
         <div style="flex:1;min-width:0">
           <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
+          ${myTitle() ? `<div class="person-title">${esc(myTitle())}</div>` : ''}
           ${profile.name ? '' : '<div class="card-sub">Tap Edit profile to add your details</div>'}
         </div>
       </div>
@@ -1927,6 +2003,7 @@ function renderProfile() {
           </div>`).join('')}
         </div>` : badgeCount ? '<p class="muted" style="font-size:13px;margin:12px 0 0">Tap a badge below to feature it here.</p>' : ''}
       <button class="btn small ghost" data-act="edit-profile" style="margin-top:12px">Edit profile</button>
+      <button class="btn small ghost" data-act="pick-title" style="margin-top:12px;margin-left:6px">${myTitle() ? 'Change title' : 'Pick a title'}</button>
     </div>
     <div class="stats six">
       <div class="stat"><b>${logs.length}</b><small>Smoked</small></div>
@@ -1958,6 +2035,7 @@ function renderProfile() {
 }
 $('#profile').addEventListener('click', e => {
   if (e.target.closest('[data-act="edit-profile"]')) return openProfileForm();
+  if (e.target.closest('[data-act="pick-title"]')) return openTitlePicker();
   if (e.target.closest('[data-act="all-earned"]')) { showAllEarned = !showAllEarned; return renderProfile(); }
   if (e.target.closest('[data-act="all-badges"]')) { showAllBadges = !showAllBadges; return renderProfile(); }
   const badge = e.target.closest('[data-badge]');
@@ -2256,9 +2334,9 @@ migrateEarned();
 checkAchievements(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
-<script src="csv.js?v=20261107b"></script>
-<script src="share.js?v=20261107e"></script>
-<script src="sync.js?v=20261107b"></script>
-<script src="friends.js?v=20261107b"></script>
+<script src="csv.js?v=20261107f"></script>
+<script src="share.js?v=20261107f"></script>
+<script src="sync.js?v=20261107f"></script>
+<script src="friends.js?v=20261107f"></script>
 </body>
 </html>

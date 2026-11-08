@@ -155,7 +155,7 @@ function personRow(p, action, label) {
       <span data-person="${p.id}" style="cursor:pointer">${personAvatar(p)}</span>
       <div class="grow" data-person="${p.id}" style="cursor:pointer">
         <div class="ach-title">${esc(personName(p))}</div>
-        ${p.name ? `<div class="ach-desc">${esc(p.friend_code || '')}</div>` : ''}
+        ${p.name || titleName(p.title) ? `<div class="ach-desc">${esc([titleName(p.title), p.name && p.friend_code].filter(Boolean).join(' · '))}</div>` : ''}
       </div>
       <button class="btn small ghost" data-act="${action}" data-id="${p.id}" data-name="${esc(personName(p))}">${label}</button>
     </div>`;
@@ -303,6 +303,7 @@ async function openFriendProfile(id) {
       ${personAvatar(p, 56)}
       <div style="flex:1;min-width:0">
         <div class="card-title" style="font-size:20px">${esc(personName(p))}</div>
+        ${titleName(p.title) ? `<div class="person-title">${esc(titleName(p.title))}</div>` : ''}
         <div class="card-sub">${esc(p.friend_code || '')}</div>
       </div>
     </div>

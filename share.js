@@ -164,7 +164,18 @@ function cardBody(ctx, l, opts, top, c, draw) {
     ctx.fillText('MyWrap', x + W - brandW, y - 4);
     ctx.font = `400 30px ${CARD_SANS}`;
     const who = opts.name && profile.name ? `Smoked by ${profile.name}  ·  ` : 'Smoked ';
-    ctx.fillText(cardLines(ctx, who + fmtDate(l.date), W - Math.max(brandW, siteW) - 30, 1)[0], x, y + 22);
+    const leftW = W - Math.max(brandW, siteW) - 30;
+    ctx.fillStyle = c.muted;
+    // With a title, it goes on its own line under the name
+    const title = opts.name && profile.name ? myTitle() : '';
+    ctx.fillText(cardLines(ctx, who + fmtDate(l.date), leftW, 1)[0], x, title ? y : y + 22);
+    if (title) {
+      ctx.font = `700 24px ${CARD_SANS}`;
+      ctx.fillStyle = c.accent;
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
+      ctx.fillText(cardLines(ctx, title.toUpperCase(), leftW, 1)[0], x, y + 44);
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    }
   }
   return y + 76 + CARD_PAD - top;
 }
