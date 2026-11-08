@@ -231,4 +231,5 @@ create policy "unblock" on public.blocks for delete to authenticated
 
 -- ---------- Cigar photos ----------
 -- See supabase/add-photos.sql (private "photos" storage bucket and its access rules)
--- supabase/add-avatars.sql (profile photos) and supabase/add-titles.sql (badge titles).
+-- supabase/add-avatars.sql (profile photos), supabase/add-titles.sql (badge titles)
+-- and supabase/lock-friend-codes.sql (friend codes can only change from the dashboard).
