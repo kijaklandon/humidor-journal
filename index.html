@@ -569,8 +569,9 @@
 <div class="backdrop" id="sheet"><div class="sheet" id="sheet-body"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="catalog.js"></script>
-<script src="photos.js"></script>
+<!-- ?v= makes phones fetch fresh copies after an update; bump it whenever these files change -->
+<script src="catalog.js?v=20261107b"></script>
+<script src="photos.js?v=20261107b"></script>
 <script>
 // ---------- Reference data ----------
 const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
@@ -2249,8 +2250,8 @@ migrateEarned();
 checkAchievements(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
-<script src="csv.js"></script>
-<script src="sync.js"></script>
-<script src="friends.js"></script>
+<script src="csv.js?v=20261107b"></script>
+<script src="sync.js?v=20261107b"></script>
+<script src="friends.js?v=20261107b"></script>
 </body>
 </html>
