@@ -335,6 +335,7 @@
   .kv dd { margin: 0; }
   .share-preview { display: grid; place-items: center; min-height: 240px; margin-bottom: 12px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
   .share-preview img { display: block; width: 100%; height: auto; }
+  .est-tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
   .person-title { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-top: 2px; }
   .quote { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; }
 
@@ -574,6 +575,7 @@
 
 <!-- ?v= makes phones fetch fresh copies after an update; bump it whenever these files change -->
 <script src="catalog.js?v=20261107f"></script>
+<script src="prices.js?v=20261107g"></script>
 <script src="photos.js?v=20261107f"></script>
 <script>
 // ---------- Reference data ----------
@@ -1525,14 +1527,27 @@ function openCheckinHistory() {
   $('#sheet').classList.add('open');
 }
 
+// Price per cigar: what you typed, else what you paid for the same cigar
+// before, else the Vault's typical US price (only when prices are in dollars)
+function itemPrice(i) {
+  if (i.price) return { v: i.price };
+  const same = x => x !== i && x.price && x.name === i.name && (x.brand || '') === (i.brand || '');
+  const before = inventory.filter(same).sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
+  if (before) return { v: before.price, est: 'paid' };
+  const typical = currency() === 'USD' ? typicalPrice(i.brand, i.name) : null;
+  return typical ? { v: typical, est: 'typical' } : null;
+}
+
 function renderHumidor() {
   renderClimate();
   const total = inventory.reduce((s, i) => s + i.qty, 0);
-  const value = inventory.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+  const prices = inventory.map(i => [i, itemPrice(i)]);
+  const value = prices.reduce((s, [i, p]) => s + (p?.v || 0) * i.qty, 0);
+  const anyEst = prices.some(([, p]) => p?.est);
   $('#h-stats').innerHTML = `
     <div class="stat"><b>${total}</b><small>Cigars</small></div>
     <div class="stat"><b>${inventory.length}</b><small>Kinds</small></div>
-    <div class="stat"><b style="font-size:17px;line-height:26px">${value ? money(value) : '–'}</b><small>Value</small></div>`;
+    <div class="stat"><b style="font-size:17px;line-height:26px">${value ? (anyEst ? '≈ ' : '') + money(value) : '–'}</b><small>${anyEst ? 'Value (est.)' : 'Value'}</small></div>`;
 
   if (!inventory.length) {
     $('#h-list').innerHTML = `
@@ -1550,6 +1565,7 @@ function renderHumidor() {
           <div class="card-title">${esc(i.name)}${lowTag(i.qty)}</div>
           <div class="card-sub">${esc([i.brand, i.wrapper, STRENGTHS[i.strength - 1], i.size].filter(Boolean).join(' · '))}</div>
           ${i.store || i.date || i.price ? `<div class="card-sub">${esc([i.date ? 'Bought ' + fmtDate(i.date) : '', i.store, i.price ? money(i.price) + ' each' : ''].filter(Boolean).join(' · '))}</div>` : ''}
+          ${!i.price && itemPrice(i) ? `<div class="card-sub">~${money(itemPrice(i).v)} each <span class="est-tag">${itemPrice(i).est === 'paid' ? 'est. from what you paid' : 'est. typical price'}</span></div>` : ''}
           ${restingFor(i.date) ? `<div class="card-sub" style="color:var(--accent)">${restingFor(i.date)}</div>` : ''}
         </div>
         <span class="badge">×${i.qty}</span>
