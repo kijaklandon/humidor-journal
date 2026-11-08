@@ -7,7 +7,7 @@
 
 const CARD_W = 1080, CARD_PAD = 72;
 const APP_SITE = 'mywrapcigars.com';
-const SHARE_TEXT = 'Logged on MyWrap, my cigar journal. Get it at https://mywrapcigars.com';
+const SHARE_TEXT = 'I tracked this cigar on MyWrap my personal cigar journal. Start logging your cigars today!\nhttps://mywrapcigars.com';
 const CARD_SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 const CARD_SERIF = 'Georgia, "Times New Roman", serif';
 
