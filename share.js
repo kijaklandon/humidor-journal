@@ -6,6 +6,8 @@
 // ============================================================
 
 const CARD_W = 1080, CARD_PAD = 72;
+const APP_SITE = 'mywrapcigars.com';
+const SHARE_TEXT = 'Logged on MyWrap, my cigar journal. Get it at https://mywrapcigars.com';
 const CARD_SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 const CARD_SERIF = 'Georgia, "Times New Roman", serif';
 
@@ -135,21 +137,86 @@ function cardBody(ctx, l, opts, top, c, draw) {
     y += h + 30;
   }
 
-  // Footer: who and when on the left, the app's name on the right
+  if (l.pairing) {
+    ctx.font = `600 32px ${CARD_SANS}`;
+    const label = 'Paired with  ';
+    const lw = ctx.measureText(label).width;
+    if (draw) { ctx.fillStyle = c.accent; ctx.fillText(label, x, y); }
+    ctx.font = `400 32px ${CARD_SANS}`;
+    if (draw) { ctx.fillStyle = c.text; ctx.fillText(cardLines(ctx, l.pairing, W - lw, 1)[0], x + lw, y); }
+    y += 62;
+  }
+
+  if (opts.smoke) y = cardSmokeNotes(ctx, l.detail, x, y, W, c, draw);
+
+  // Footer: who and when on the left, the app's name and address on the right
   y += 6;
   if (draw) { ctx.fillStyle = c.border; ctx.fillRect(x, y, W, 2); }
   y += 30;
   if (draw) {
+    ctx.font = `600 26px ${CARD_SANS}`;
+    const siteW = ctx.measureText(APP_SITE).width;
+    ctx.fillStyle = c.muted;
+    ctx.fillText(APP_SITE, x + W - siteW, y + 46);
     ctx.font = `700 42px ${CARD_SERIF}`;
     const brandW = ctx.measureText('MyWrap').width;
     ctx.fillStyle = c.accent;
     ctx.fillText('MyWrap', x + W - brandW, y - 4);
     ctx.font = `400 30px ${CARD_SANS}`;
     const who = opts.name && profile.name ? `Smoked by ${profile.name}  ·  ` : 'Smoked ';
-    ctx.fillStyle = c.muted;
-    ctx.fillText(cardLines(ctx, who + fmtDate(l.date), W - brandW - 30, 1)[0], x, y + 4);
+    ctx.fillText(cardLines(ctx, who + fmtDate(l.date), W - Math.max(brandW, siteW) - 30, 1)[0], x, y + 22);
   }
-  return y + 42 + CARD_PAD - top;
+  return y + 76 + CARD_PAD - top;
+}
+
+// Draw/burn/construction/ash as dots, then what each third tasted like
+function cardSmokeNotes(ctx, d, x, y, W, c, draw) {
+  if (!d) return y;
+  const scores = SCORES.filter(s => d[s.k]);
+  const thirds = (d.thirds || []).map((t, i) => ({ ...t, name: THIRDS[i] })).filter(t => t.notes?.length || t.text);
+  if (!scores.length && !thirds.length) return y;
+
+  ctx.font = `700 26px ${CARD_SANS}`;
+  if (draw) {
+    ctx.fillStyle = c.accent;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
+    ctx.fillText('SMOKE NOTES', x, y);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  }
+  y += 48;
+
+  // Two columns: "Draw ●●●●○ Good"
+  const colW = W / 2;
+  scores.forEach((s, i) => {
+    const cx = x + (i % 2) * colW, cy = y + Math.floor(i / 2) * 50;
+    if (!draw) return;
+    ctx.font = `500 28px ${CARD_SANS}`;
+    ctx.fillStyle = c.muted;
+    ctx.fillText(s.name, cx, cy);
+    const dotsX = cx + 180;
+    for (let k = 0; k < 5; k++) {
+      ctx.beginPath();
+      ctx.arc(dotsX + k * 24 + 8, cy + 15, 8, 0, Math.PI * 2);
+      ctx.fillStyle = k < d[s.k] ? c.accent : c.off;
+      ctx.fill();
+    }
+    ctx.fillStyle = c.text;
+    ctx.fillText(cardLines(ctx, s.labels[d[s.k] - 1], colW - 330, 1)[0], dotsX + 132, cy);
+  });
+  if (scores.length) y += Math.ceil(scores.length / 2) * 50 + 14;
+
+  // "First third  Cedar, pepper. Opened up nicely" on up to two lines each
+  for (const t of thirds) {
+    ctx.font = `600 30px ${CARD_SANS}`;
+    const lw = ctx.measureText(t.name + '  ').width;
+    if (draw) { ctx.fillStyle = c.text; ctx.fillText(t.name, x, y); }
+    ctx.font = `400 30px ${CARD_SANS}`;
+    const said = [t.notes?.join(', '), t.text?.replace(/\s+/g, ' ')].filter(Boolean).join('. ');
+    const lines = cardLines(ctx, said, W - lw, 2);
+    if (draw) { ctx.fillStyle = c.muted; lines.forEach((s, i) => ctx.fillText(s, x + lw, y + i * 40)); }
+    y += lines.length * 40 + 12;
+  }
+  return y + 24;
 }
 
 async function cardPhoto(l) {
@@ -174,7 +241,7 @@ async function drawShareCard(l, opts) {
   canvas.width = CARD_W;
   const bodyH = cardBody(ctx, l, opts, 0, c, false);
   // No photo: square (or taller if the text needs it). Photo: fill up to 4:5.
-  const photoH = photo ? Math.max(400, 1342 - bodyH) : 0;
+  const photoH = photo ? Math.max(340, 1342 - bodyH) : 0;
   const top = photo ? photoH + 8 : CARD_PAD + 70;
   canvas.height = Math.max(photo ? 1350 : CARD_W, top + bodyH);
 
@@ -184,7 +251,12 @@ async function drawShareCard(l, opts) {
     // Cover-crop into the top area, then fade into the background
     const s = Math.max(CARD_W / photo.naturalWidth, photoH / photo.naturalHeight);
     const w = photo.naturalWidth * s, h = photo.naturalHeight * s;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, CARD_W, photoH);
+    ctx.clip();
     ctx.drawImage(photo, (CARD_W - w) / 2, (photoH - h) / 2, w, h);
+    ctx.restore();
     URL.revokeObjectURL(photo.src);
     const fade = ctx.createLinearGradient(0, photoH - 220, 0, photoH);
     fade.addColorStop(0, 'rgba(0,0,0,0)');
@@ -206,18 +278,19 @@ async function drawShareCard(l, opts) {
   return new Promise(res => canvas.toBlob(res, 'image/png'));
 }
 
-const shareSlug = s => (s || 'cigar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cigar';
+const shareSlug = s => (s || 'cigar').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cigar';
 
 async function openShareCard(id) {
   const l = logs.find(x => x.id === id);
   if (!l) return;
-  const opts = { notes: getPref('shareNotes') ?? true, name: getPref('shareName') ?? false };
+  const opts = { notes: getPref('shareNotes') ?? true, smoke: getPref('shareSmoke') ?? true, name: getPref('shareName') ?? false };
   let file = null, previewUrl = null;
   const body = $('#sheet-body');
   body.innerHTML = `
     <h2>Share this cigar</h2>
     <div class="share-preview" id="share-preview"><span class="card-sub">Making your card…</span></div>
     ${l.enjoyed ? `<label class="toggle field"><input type="checkbox" id="share-notes"${opts.notes ? ' checked' : ''}> <span style="margin:0;color:var(--text)">Show my notes</span></label>` : ''}
+    ${detailHtml(l.detail) ? `<label class="toggle field"><input type="checkbox" id="share-smoke"${opts.smoke ? ' checked' : ''}> <span style="margin:0;color:var(--text)">Show my smoke notes</span></label>` : ''}
     <label class="toggle field"><input type="checkbox" id="share-name"${opts.name ? ' checked' : ''}${profile.name ? '' : ' disabled'}> <span style="margin:0;color:var(--text)">Show my name${profile.name ? '' : ' (add one in your profile)'}</span></label>
     <div class="btn-row" style="margin-top:14px">
       <button class="btn ghost" data-act="back">Back</button>
@@ -239,6 +312,7 @@ async function openShareCard(id) {
 
   body.onchange = e => {
     if (e.target.id === 'share-notes') { opts.notes = e.target.checked; setPref('shareNotes', opts.notes); }
+    if (e.target.id === 'share-smoke') { opts.smoke = e.target.checked; setPref('shareSmoke', opts.smoke); }
     if (e.target.id === 'share-name') { opts.name = e.target.checked; setPref('shareName', opts.name); }
     render();
   };
@@ -248,7 +322,7 @@ async function openShareCard(id) {
     if (act === 'share' && file) {
       if (navigator.canShare?.({ files: [file] })) {
         // Cancelling the share menu also lands in catch; that's fine
-        try { await navigator.share({ files: [file] }); } catch {}
+        try { await navigator.share({ files: [file], text: SHARE_TEXT }); } catch {}
       } else {
         const a = document.createElement('a');
         a.href = previewUrl;
