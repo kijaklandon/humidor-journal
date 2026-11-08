@@ -8,6 +8,8 @@
 
 alter table public.profiles add column if not exists avatar text;
 
+-- Safe to run again: replaces the rule if it's already there
+drop policy if exists "photos: see avatars of friends" on storage.objects;
 create policy "photos: see avatars of friends" on storage.objects for select to authenticated
   using (bucket_id = 'photos' and storage.filename(name) like 'avatar-%' and (
     (storage.foldername(name))[1] = auth.uid()::text
