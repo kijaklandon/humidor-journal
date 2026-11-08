@@ -163,11 +163,11 @@ function cardBody(ctx, l, opts, top, c, draw) {
     ctx.fillStyle = c.accent;
     ctx.fillText('MyWrap', x + W - brandW, y - 4);
     ctx.font = `400 30px ${CARD_SANS}`;
-    const who = opts.name && profile.name ? `Smoked by ${profile.name}  ·  ` : 'Smoked ';
+    const who = opts.name && profile.name ? `Smoked by ${profile.name}${iAmFounder() ? ' ✦' : ''}  ·  ` : 'Smoked ';
     const leftW = W - Math.max(brandW, siteW) - 30;
     ctx.fillStyle = c.muted;
     // With a title, it goes on its own line under the name
-    const title = opts.name && profile.name ? myTitle() : '';
+    const title = opts.name && profile.name ? [iAmFounder() && 'Founder', myTitle()].filter(Boolean).join(' · ') : '';
     ctx.fillText(cardLines(ctx, who + fmtDate(l.date), leftW, 1)[0], x, title ? y : y + 22);
     if (title) {
       ctx.font = `700 24px ${CARD_SANS}`;

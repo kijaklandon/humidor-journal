@@ -335,6 +335,20 @@
   .kv dd { margin: 0; }
   .share-preview { display: grid; place-items: center; min-height: 240px; margin-bottom: 12px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
   .share-preview img { display: block; width: 100%; height: auto; }
+  .avatar.founder { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px #e3b04b; }
+  .founder-mark { color: #e3b04b; margin-left: 6px; font-size: .85em; }
+  .founder-shine {
+    font-weight: 800; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(100deg, #a8752a 20%, #ffe8a3 40%, #e3b04b 60%, #a8752a 80%);
+    background-size: 200% auto; animation: founder-shine 3s linear infinite;
+  }
+  @keyframes founder-shine { to { background-position: -200% center; } }
+  @media (prefers-reduced-motion: reduce) { .founder-shine { animation: none; } }
+  .founder-banner {
+    display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px;
+    border: 1px solid #e3b04b; border-radius: 12px; background: linear-gradient(135deg, rgba(227,176,75,.2), rgba(227,176,75,.04));
+  }
+  .founder-banner .founder-shine { font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase; }
   .est-tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
   .person-title { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-top: 2px; }
   .quote { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; }
@@ -574,9 +588,9 @@
 <div class="toast" id="toast"></div>
 
 <!-- ?v= makes phones fetch fresh copies after an update; bump it whenever these files change -->
-<script src="catalog.js?v=20261107f"></script>
-<script src="prices.js?v=20261107g"></script>
-<script src="photos.js?v=20261107f"></script>
+<script src="catalog.js?v=20261107h"></script>
+<script src="prices.js?v=20261107h"></script>
+<script src="photos.js?v=20261107h"></script>
 <script>
 // ---------- Reference data ----------
 const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
@@ -1811,6 +1825,25 @@ const titleEarned = ti => !!earned[`${ti.track}:${ti.step}`] || trackValue(title
 const titleName = id => TITLES.find(ti => ti.id === id)?.name || '';
 const myTitle = () => { const ti = TITLES.find(x => x.id === profile.title); return ti && titleEarned(ti) ? ti.name : ''; };
 
+// ---------- Founder ----------
+// Friend codes can only be changed from the Supabase dashboard
+// (supabase/lock-friend-codes.sql), so nobody else can claim this one
+const FOUNDER_CODE = 'MW-00001';
+const isFounder = code => code === FOUNDER_CODE;
+// account lives in sync.js, which loads after this script
+const iAmFounder = () => { try { return isFounder(account?.friendCode); } catch { return false; } };
+const FOUNDER_MARK = '<span class="founder-mark" title="MyWrap founder" aria-label="Founder">✦</span>';
+const founderBanner = () => `
+  <div class="founder-banner">
+    <span class="medal" style="--c:#e3b04b;--s:44px">001</span>
+    <div><div class="founder-shine">Founder</div><div class="card-sub">Built MyWrap · Member No. 001</div></div>
+  </div>`;
+// The line under a name: the founder tag and/or a badge title
+function titleLine(founder, title) {
+  if (!founder && !title) return '';
+  return `<div class="person-title">${founder ? '<span class="founder-shine">Founder</span>' : ''}${founder && title ? ' · ' : ''}${esc(title || '')}</div>`;
+}
+
 function openTitlePicker() {
   const open = TITLES.filter(titleEarned), locked = TITLES.filter(ti => !titleEarned(ti));
   const row = ti => `
@@ -2001,13 +2034,14 @@ function renderProfile() {
   $('#profile').innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:flex-start;gap:14px">
-        <div class="avatar">${initialsOrIcon(profile.name)}${avatarImg(profile.avatar)}</div>
+        <div class="avatar ${iAmFounder() ? 'founder' : ''}">${initialsOrIcon(profile.name)}${avatarImg(profile.avatar)}</div>
         <div style="flex:1;min-width:0">
-          <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}</div>
-          ${myTitle() ? `<div class="person-title">${esc(myTitle())}</div>` : ''}
+          <div class="card-title" style="font-size:20px">${esc(profile.name || 'Your profile')}${iAmFounder() ? FOUNDER_MARK : ''}</div>
+          ${titleLine(iAmFounder(), myTitle())}
           ${profile.name ? '' : '<div class="card-sub">Tap Edit profile to add your details</div>'}
         </div>
       </div>
+      ${iAmFounder() ? founderBanner() : ''}
       ${profile.bio ? `<p style="margin:12px 0 0">${esc(profile.bio)}</p>` : ''}
       ${favs.length ? `<div class="chips">${favs.map(f => `<span class="chip">${esc(f)}</span>`).join('')}</div>` : ''}
       ${featured.length ? `
@@ -2350,9 +2384,9 @@ migrateEarned();
 checkAchievements(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
-<script src="csv.js?v=20261107f"></script>
-<script src="share.js?v=20261107f"></script>
-<script src="sync.js?v=20261107f"></script>
-<script src="friends.js?v=20261107f"></script>
+<script src="csv.js?v=20261107h"></script>
+<script src="share.js?v=20261107h"></script>
+<script src="sync.js?v=20261107h"></script>
+<script src="friends.js?v=20261107h"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ const APP_URL = 'https://mywrapcigars.com/';
 const personName = p => p.name || p.friend_code || 'Cigar friend';
 const initialsOf = name => (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 const personAvatar = (p, size = 40) =>
-  `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc(initialsOf(p.name) || '•')}${avatarImg(p.avatar, p.id)}</div>`;
+  `<div class="avatar ${isFounder(p.friend_code) ? 'founder' : ''}" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc(initialsOf(p.name) || '•')}${avatarImg(p.avatar, p.id)}</div>`;
 
 // Codes look like MW-7K3Q9. Accept "7k3q9", "mw 7k3q9", and old "HJ-" codes from
 // when the app was called Humidor Journal (same letters, new prefix).
@@ -136,7 +136,7 @@ function feedHtml() {
       <div class="row" style="justify-content:flex-start;gap:10px">
         <span data-person="${person.id}">${personAvatar(person, 36)}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:650" data-person="${person.id}">${esc(personName(person))}</div>
+          <div style="font-weight:650" data-person="${person.id}">${esc(personName(person))}${isFounder(person.friend_code) ? FOUNDER_MARK : ''}</div>
           <div class="card-sub">${fmtDate(l.date)}</div>
         </div>
         ${starsHtml(l.rating || 0)}
@@ -154,7 +154,7 @@ function personRow(p, action, label) {
     <div class="ach-row">
       <span data-person="${p.id}" style="cursor:pointer">${personAvatar(p)}</span>
       <div class="grow" data-person="${p.id}" style="cursor:pointer">
-        <div class="ach-title">${esc(personName(p))}</div>
+        <div class="ach-title">${esc(personName(p))}${isFounder(p.friend_code) ? FOUNDER_MARK : ''}</div>
         ${p.name || titleName(p.title) ? `<div class="ach-desc">${esc([titleName(p.title), p.name && p.friend_code].filter(Boolean).join(' · '))}</div>` : ''}
       </div>
       <button class="btn small ghost" data-act="${action}" data-id="${p.id}" data-name="${esc(personName(p))}">${label}</button>
@@ -211,7 +211,7 @@ function openFriendLog(person, l, back) {
   $('#sheet-body').innerHTML = `
     <div class="row" style="justify-content:flex-start;gap:10px;margin-bottom:10px">
       <span data-person="${person.id}">${personAvatar(person, 32)}</span>
-      <div style="flex:1" data-person="${person.id}"><b>${esc(personName(person))}</b><div class="card-sub">${fmtDate(l.date)}</div></div>
+      <div style="flex:1" data-person="${person.id}"><b>${esc(personName(person))}</b>${isFounder(person.friend_code) ? FOUNDER_MARK : ''}<div class="card-sub">${fmtDate(l.date)}</div></div>
     </div>
     ${photoImg(l, person.id)}
     <div class="row"><h2 style="margin:0">${esc(l.name)}</h2>${starsHtml(l.rating || 0)}</div>
@@ -302,11 +302,12 @@ async function openFriendProfile(id) {
     <div class="row" style="justify-content:flex-start;gap:14px">
       ${personAvatar(p, 56)}
       <div style="flex:1;min-width:0">
-        <div class="card-title" style="font-size:20px">${esc(personName(p))}</div>
-        ${titleName(p.title) ? `<div class="person-title">${esc(titleName(p.title))}</div>` : ''}
+        <div class="card-title" style="font-size:20px">${esc(personName(p))}${isFounder(p.friend_code) ? FOUNDER_MARK : ''}</div>
+        ${titleLine(isFounder(p.friend_code), titleName(p.title))}
         <div class="card-sub">${esc(p.friend_code || '')}</div>
       </div>
     </div>
+    ${isFounder(p.friend_code) ? founderBanner() : ''}
     ${p.bio ? `<p style="margin:12px 0 0">${esc(p.bio)}</p>` : ''}
     ${favs.length ? `<div class="chips">${favs.map(f => `<span class="chip">${esc(f)}</span>`).join('')}</div>` : ''}
     ${view.badges ? `<div class="featured">${view.badges}</div>` : ''}
