@@ -9,6 +9,15 @@ const SUPABASE_URL = 'https://pxvpfvvkyxrziiapcvkf.supabase.co';
 // rules (supabase/schema.sql) decide what anyone can read or change.
 const SUPABASE_KEY = 'sb_publishable_bVfCqDdjlAHoxyzvC_J9JQ_nUXUqLFM';
 
+// What an emailed link brought us here with. Read first: the client below clears it.
+const AUTH_LINK = (() => {
+  const hash = new URLSearchParams(location.hash.slice(1)), query = new URLSearchParams(location.search);
+  return {
+    failed: !!(hash.get('error') || hash.get('error_code') || query.get('error') || query.get('error_code')),
+    confirmed: hash.get('type') === 'signup' && hash.has('access_token'),
+  };
+})();
+
 const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true },
 });
@@ -311,13 +320,21 @@ function openAuthForm(mode = 'signin') {
       ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: APP_HOME } })
       : await sb.auth.signInWithPassword({ email, password });
     if (error) {
+      if ((error.message || '').toLowerCase().includes('not confirmed')) return showConfirmEmail('Confirm your email first',
+        `Your account is waiting on the link we sent to <b>${esc(email)}</b>. Check your spam folder, or get a new link below.`, email);
       btn.disabled = false;
       btn.textContent = signup ? 'Create account' : 'Sign in';
       return toast(friendlyAuthError(error));
     }
+    // A confirmed email gets a normal-looking reply with no identities, and no email is sent
+    if (signup && data.user?.identities?.length === 0) {
+      openAuthForm('signin');
+      $('#a-email').value = email;
+      return toast('That email already has an account. Try Sign in');
+    }
     if (signup) { try { localStorage.setItem('humidor.age21', '1'); } catch {} }
-    if (!data.session) return showAuthMessage('Check your email',
-      `We sent a link to <b>${esc(email)}</b>. Tap it to finish creating your account, then come back and sign in. If you don't see it in a minute, check your spam folder.`);
+    if (!data.session) return showConfirmEmail('Check your email',
+      `We sent a link to <b>${esc(email)}</b>. Tap it to confirm your account, then come back here and sign in. If you don't see it in a minute, check your spam folder.`, email);
     closeSheet();
     toast(signup ? 'Account created. Backing up your journal…' : 'Signed in. Syncing…');
   };
@@ -334,6 +351,38 @@ function showAuthMessage(title, html) {
     <p class="muted" style="margin:0 0 16px">${html}</p>
     <div class="btn-row"><button class="btn" data-act="close">OK</button></div>`;
   $('#sheet-body').onclick = e => { if (e.target.closest('[data-act="close"]')) closeSheet(); };
+  $('#sheet').classList.add('open');
+}
+
+// For accounts waiting on their confirmation link. With no email given, asks for one.
+function showConfirmEmail(title, html, email = '') {
+  $('#sheet-body').innerHTML = `
+    <div class="card-title" style="font-size:18px;margin:0 0 8px">${title}</div>
+    <p class="muted" style="margin:0 0 16px">${html}</p>
+    ${email ? '' : '<label class="field"><span>Email</span><input type="email" id="c-email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>'}
+    <div class="btn-row">
+      <button class="btn ghost" data-act="resend">Resend email</button>
+      <button class="btn" data-act="signin">Sign in</button>
+    </div>`;
+  $('#sheet-body').onclick = async e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'signin') return openAuthForm('signin');
+    if (act !== 'resend') return;
+    const to = email || $('#c-email').value.trim();
+    if (!to) return toast('Enter your email');
+    const btn = e.target.closest('[data-act]');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const { error } = await sb.auth.resend({ type: 'signup', email: to, options: { emailRedirectTo: APP_HOME } });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Resend email';
+      return toast(friendlyAuthError(error));
+    }
+    toast('New link sent. Use the newest email');
+    btn.textContent = 'Sent ✓';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Resend email'; }, 60000);
+  };
   $('#sheet').classList.add('open');
 }
 
@@ -398,7 +447,7 @@ function friendlyAuthError(error) {
   const m = (error.message || '').toLowerCase();
   if (m.includes('invalid login')) return 'Wrong email or password';
   if (m.includes('already registered')) return 'That email already has an account. Try Sign in';
-  if (m.includes('rate limit')) return 'Too many tries. Wait a minute and try again';
+  if (m.includes('rate limit') || m.includes('only request this after')) return 'Too many tries. Wait a minute and try again';
   if (m.includes('not confirmed')) return 'Confirm your email first. Tap the link we sent you (check spam too)';
   if (m.includes('same') && m.includes('password')) return 'Pick a password different from your old one';
   if (m.includes('fetch') || m.includes('network')) return "Can't reach the server. Check your connection";
@@ -511,6 +560,15 @@ if (sb) {
     if (event === 'PASSWORD_RECOVERY') setTimeout(openNewPasswordForm, 0);
   });
   sb.auth.getSession().then(({ data }) => setAccount(data.session));
+  if (AUTH_LINK.failed) {
+    history.replaceState(null, '', location.pathname);
+    showConfirmEmail("That link didn't work",
+      "It may have expired or already been used. Enter your email for a new one. If you were resetting your password, tap Sign in, then Forgot password.");
+  } else if (AUTH_LINK.confirmed && !matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
+    // Home-screen apps keep their own sign-in, separate from the browser this link opened in
+    showAuthMessage('Email confirmed',
+      "You're all set and signed in here. If you added MyWrap to your home screen, open it from there and sign in once with your email and password.");
+  }
   // Catch up when the app comes back to the foreground or back online
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleSync(); });
   window.addEventListener('online', scheduleSync);
