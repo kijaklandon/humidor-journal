@@ -349,6 +349,8 @@
     border: 1px solid #e3b04b; border-radius: 12px; background: linear-gradient(135deg, rgba(227,176,75,.2), rgba(227,176,75,.04));
   }
   .founder-banner .founder-shine { font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase; }
+  .recap-hero { display: flex; align-items: center; gap: 14px; }
+  .recap-hero b { font: 700 72px/1 Georgia, serif; color: var(--accent); }
   .est-tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
   .person-title { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-top: 2px; }
   .quote { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; }
@@ -591,6 +593,7 @@
 <script src="catalog.js?v=20261107h"></script>
 <script src="prices.js?v=20261107h"></script>
 <script src="photos.js?v=20261107h"></script>
+<script src="recap.js?v=20261108a"></script>
 <script>
 // ---------- Reference data ----------
 const WRAPPERS = ['Connecticut', 'Cameroon', 'Habano', 'Corojo', 'Sumatra', 'Rosado', 'Maduro', 'Broadleaf', 'San Andrés', 'Candela', 'Other'];
@@ -1041,7 +1044,7 @@ function renderSmoked() {
     .sort(JOURNAL_SORTS[$('#j-sort').value] || newest);
   const narrowed = q || $('#j-filter').value !== 'all';
 
-  $('#journal-list').innerHTML = backupNudgeHtml()
+  $('#journal-list').innerHTML = backupNudgeHtml() + recapNudgeHtml()
     + (narrowed && list.length ? `<p class="muted" style="font-size:13px;margin:0 0 8px">Showing ${list.length} of ${logs.length}</p>` : '')
     + (list.length ? list.map(l => `
     <div class="card tap" data-id="${l.id}">
@@ -2063,6 +2066,7 @@ function renderProfile() {
       <div class="stat"><b>${invTotal()}</b><small>In humidor</small></div>
       <div class="stat"><b>${done.length}</b><small>Achievements</small></div>
     </div>
+    ${logs.length ? '<button class="btn ghost block" data-act="recap" style="margin-top:12px">Monthly recap</button>' : ''}
     <h3>Your stats</h3>
     <div class="stat-list">${TRACKS.map(trackRow).join('')}</div>
     <h3>Badges · ${badgeCount} of ${TRACKS.length}</h3>
@@ -2086,6 +2090,7 @@ function renderProfile() {
 $('#profile').addEventListener('click', e => {
   if (e.target.closest('[data-act="edit-profile"]')) return openProfileForm();
   if (e.target.closest('[data-act="pick-title"]')) return openTitlePicker();
+  if (e.target.closest('[data-act="recap"]')) return openRecap();
   if (e.target.closest('[data-act="all-earned"]')) { showAllEarned = !showAllEarned; return renderProfile(); }
   if (e.target.closest('[data-act="all-badges"]')) { showAllBadges = !showAllBadges; return renderProfile(); }
   const badge = e.target.closest('[data-badge]');
