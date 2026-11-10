@@ -104,7 +104,12 @@ function openSmokeStart() {
 function openSmokeTimer() {
   const body = $('#sheet-body');
   body.onchange = null;
+  body.classList.add('full');
   body.innerHTML = `
+    <button type="button" class="icon-btn timer-hide" data-act="hide" aria-label="Hide the timer. It keeps running">
+      <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="timer-wrap">
     <div class="timer-head">
       <div class="card-title" style="font-size:20px">${esc(smoke.n)}</div>
       ${smoke.b ? `<div class="card-sub">${esc(smoke.b)}</div>` : ''}
@@ -119,10 +124,12 @@ function openSmokeTimer() {
     <div class="btn-row">
       <button class="btn ghost" data-act="cancel">Cancel</button>
       <button class="btn" data-act="done">Done smoking</button>
+    </div>
     </div>`;
   body.onchange = e => { if (e.target.id === 't-pace') { setPref('puffEvery', +e.target.value); tickTimer(); } };
   body.onclick = e => {
     const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'hide') return closeSheet();
     if (act === 'cancel' && confirm('Stop the timer without logging this cigar?')) {
       smoke = null;
       saveSmoke();
