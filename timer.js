@@ -57,6 +57,7 @@ function openSmokeStart() {
       <div class="mini-label">From your humidor</div>
       <div class="chips" style="margin:6px 0 12px">${picks.map(i => `<button type="button" class="chip" data-inv="${esc(i.id)}">${esc(i.name)}</button>`).join('')}</div>` : ''}
     <label class="field"><span>Cigar name</span><input type="text" id="t-name" list="catalog-list" placeholder="Start typing, e.g. Padrón 1964"></label>
+    <button type="button" class="btn small ghost scan-btn" id="t-scan">${SCAN_ICON} Scan the band</button>
     <label class="field"><span>Brand</span><input type="text" id="t-brand"></label>
     <label class="field"><span>Puff reminder</span><select id="t-pace">${PUFF_PACES.map(([s, label]) => `<option value="${s}"${s === puffPace() ? ' selected' : ''}>${label}</option>`).join('')}</select></label>
     <div class="btn-row">

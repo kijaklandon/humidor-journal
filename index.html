@@ -378,6 +378,13 @@
   @keyframes puff-now { 50% { transform: scale(1.06); } }
   @media (prefers-reduced-motion: reduce) { #timer-btn.active svg path:last-child, .puff.now { animation: none; } }
   .timer-tip { text-align: center; color: var(--muted); font-size: 14px; min-height: 40px; margin: 10px 0 0; }
+  /* Scan a band */
+  .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; margin-right: 4px; }
+  .scan-btn { width: 100%; margin: -4px 0 14px; }
+  .scan-pick { display: block; width: 100%; text-align: left; font: inherit; color: inherit; }
+  .scan-wait { text-align: center; padding: 40px 0 30px; color: var(--muted); }
+  .spinner { width: 40px; height: 40px; margin: 0 auto 14px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .recap-hero { display: flex; align-items: center; gap: 14px; }
   .recap-hero b { font: 700 72px/1 Georgia, serif; color: var(--accent); }
   .est-tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
@@ -461,6 +468,7 @@
         <input type="text" id="f-name" list="catalog-list" placeholder="Start typing, e.g. Padrón 1964" required>
         <datalist id="catalog-list"></datalist>
       </label>
+      <button type="button" class="btn small ghost scan-btn" id="f-scan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Scan the band</button>
       <label class="field"><span>Brand</span>
         <input type="text" id="f-brand" placeholder="e.g. Arturo Fuente">
       </label>
@@ -525,6 +533,7 @@
   <section id="view-browse" class="view">
     <h2>Cigar vault</h2>
     <input type="search" id="b-search" placeholder="Search brand, line, factory, flavor…" style="margin-bottom:8px">
+    <button type="button" class="btn small ghost scan-btn" id="b-scan" style="margin:0 0 8px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Scan a band to look it up</button>
     <div class="filters">
       <select id="b-wrapper" aria-label="Wrapper"></select>
       <select id="b-strength" aria-label="Strength"></select>
@@ -2426,6 +2435,7 @@ checkAchievements(true);
 <script src="share.js?v=20261107h"></script>
 <script src="sync.js?v=20261108a"></script>
 <script src="friends.js?v=20261107h"></script>
-<script src="timer.js?v=20261109b"></script>
+<script src="timer.js?v=20261109c"></script>
+<script src="scan.js?v=20261109a"></script>
 </body>
 </html>
