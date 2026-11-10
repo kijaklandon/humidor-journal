@@ -349,6 +349,25 @@
     border: 1px solid #e3b04b; border-radius: 12px; background: linear-gradient(135deg, rgba(227,176,75,.2), rgba(227,176,75,.04));
   }
   .founder-banner .founder-shine { font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase; }
+  #timer-btn { align-items: center; gap: 3px; }
+  .timer-mins { font-size: 12px; font-weight: 700; }
+  #timer-btn.active svg path:last-child { animation: smoke-wisp 2s ease-in-out infinite; }
+  @keyframes smoke-wisp { 50% { opacity: .3; transform: translateY(-1px); } }
+  .timer-head { text-align: center; }
+  .timer-clock { text-align: center; font: 700 64px/1.1 Georgia, serif; color: var(--accent); margin: 10px 0 6px; font-variant-numeric: tabular-nums; }
+  .puff { position: relative; width: 170px; height: 170px; margin: 0 auto; }
+  .puff svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .puff circle { fill: none; stroke-width: 8; }
+  .puff-track { stroke: var(--surface-2); }
+  .puff-ring { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 327; transition: stroke-dashoffset 1s linear; }
+  .puff-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .puff-text b { font-size: 34px; }
+  .puff-text small { color: var(--muted); font-size: 12px; max-width: 110px; }
+  .puff.now { animation: puff-now .6s ease-in-out 3; }
+  .puff.now .puff-text b { color: var(--accent); }
+  @keyframes puff-now { 50% { transform: scale(1.06); } }
+  @media (prefers-reduced-motion: reduce) { #timer-btn.active svg path:last-child, .puff.now { animation: none; } }
+  .timer-tip { text-align: center; color: var(--muted); font-size: 14px; min-height: 40px; margin: 10px 0 0; }
   .recap-hero { display: flex; align-items: center; gap: 14px; }
   .recap-hero b { font: 700 72px/1 Georgia, serif; color: var(--accent); }
   .est-tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
@@ -377,6 +396,10 @@
 <header class="top">
   <h1>My<span>Wrap</span></h1>
   <div class="top-actions">
+  <button type="button" class="icon-btn" id="timer-btn" aria-label="Start a smoke">
+    <svg viewBox="0 0 24 24"><rect x="2" y="13" width="16" height="4.5" rx="1.6"/><path d="M13 13v4.5"/><path d="M20.5 13.6v3.3"/><path d="M19.5 10.5c-1-1 1-2 0-3.2s1-2 0-3.3"/></svg>
+    <span id="timer-mins" class="timer-mins"></span>
+  </button>
   <button type="button" class="icon-btn" id="profile-btn" aria-label="Profile">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4.2-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>
   </button>
@@ -2393,5 +2416,6 @@ checkAchievements(true);
 <script src="share.js?v=20261107h"></script>
 <script src="sync.js?v=20261108a"></script>
 <script src="friends.js?v=20261107h"></script>
+<script src="timer.js?v=20261109a"></script>
 </body>
 </html>
